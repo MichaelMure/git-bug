@@ -1,0 +1,25 @@
+box: golang
+build:
+  steps:
+    - setup-go-workspace
+    - script:
+        name: install goveralls
+        code: |
+          go get github.com/mattn/goveralls
+    - script:
+        name: go get
+        code: |
+          go get ./...
+    - script:
+        name: go build
+        code: |
+          go build ./...
+    - script:
+        name: go test
+        code: |
+          go test ./...
+    - script:
+        name: coveralls
+        code: |
+          goveralls -v -service wercker.com -repotoken $COVERALLS_TOKEN
+

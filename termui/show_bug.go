@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	markdown "github.com/MichaelMure/go-term-markdown"
 	"github.com/MichaelMure/go-term-text"
 	"github.com/awesome-gocui/gocui"
 
@@ -198,6 +199,10 @@ func (sb *showBug) disable(g *gocui.Gui) error {
 }
 
 func (sb *showBug) renderMain(g *gocui.Gui, mainView *gocui.View) error {
+	mkdwnOpts := []markdown.Options{
+		markdown.WithImageDithering(markdown.DitheringWithBlocks),
+	}
+
 	maxX, _ := mainView.Size()
 	x0, y0, _, _, _ := g.ViewPosition(mainView.Name())
 
@@ -238,18 +243,18 @@ func (sb *showBug) renderMain(g *gocui.Gui, mainView *gocui.View) error {
 		// TODO: me might skip the rendering of blocks that are outside of the view
 		// but to do that we need to rework how sb.mainSelectableView is maintained
 
-		switch op.(type) {
+		switch op := op.(type) {
 
 		case *bug.CreateTimelineItem:
-			create := op.(*bug.CreateTimelineItem)
-
 			var content string
 			var lines int
 
-			if create.MessageIsEmpty() {
+			if op.MessageIsEmpty() {
 				content, lines = text.WrapLeftPadded(emptyMessagePlaceholder(), maxX-1, 4)
 			} else {
-				content, lines = text.WrapLeftPadded(create.Message, maxX-1, 4)
+				raw := markdown.Render(op.Message, maxX-1, 4, mkdwnOpts...)
+				content = string(raw)
+				lines = strings.Count(content, "\n")
 			}
 
 			v, err := sb.createOpView(g, viewName, x0, y0, maxX+1, lines, true)
@@ -260,42 +265,42 @@ func (sb *showBug) renderMain(g *gocui.Gui, mainView *gocui.View) error {
 			y0 += lines + 2
 
 		case *bug.AddCommentTimelineItem:
-			comment := op.(*bug.AddCommentTimelineItem)
-
 			edited := ""
-			if comment.Edited() {
+			if op.Edited() {
 				edited = " (edited)"
 			}
 
-			var message string
-			if comment.MessageIsEmpty() {
-				message, _ = text.WrapLeftPadded(emptyMessagePlaceholder(), maxX-1, 4)
+			var content string
+			var lines int
+
+			if op.MessageIsEmpty() {
+				content, lines = text.WrapLeftPadded(emptyMessagePlaceholder(), maxX-1, 4)
 			} else {
-				message, _ = text.WrapLeftPadded(comment.Message, maxX-1, 4)
+				raw := markdown.Render(op.Message, maxX-1, 4, mkdwnOpts...)
+				content = string(raw)
+				lines = strings.Count(content, "\n")
 			}
 
-			content := fmt.Sprintf("%s commented on %s%s\n\n%s",
-				colors.Magenta(comment.Author.DisplayName()),
-				comment.CreatedAt.Time().Format(timeLayout),
+			header := fmt.Sprintf("%s commented on %s%s\n\n",
+				colors.Magenta(op.Author.DisplayName()),
+				op.CreatedAt.Time().Format(timeLayout),
 				edited,
-				message,
 			)
-			content, lines = text.Wrap(content, maxX)
+			headerWrapped, headerLines := text.Wrap(header, maxX)
 
-			v, err := sb.createOpView(g, viewName, x0, y0, maxX+1, lines, true)
+			v, err := sb.createOpView(g, viewName, x0, y0, maxX+1, lines+headerLines, true)
 			if err != nil {
 				return err
 			}
+			_, _ = fmt.Fprint(v, headerWrapped)
 			_, _ = fmt.Fprint(v, content)
-			y0 += lines + 2
+			y0 += lines + headerLines + 2
 
 		case *bug.SetTitleTimelineItem:
-			setTitle := op.(*bug.SetTitleTimelineItem)
-
 			content := fmt.Sprintf("%s changed the title to %s on %s",
-				colors.Magenta(setTitle.Author.DisplayName()),
-				colors.Bold(setTitle.Title),
-				setTitle.UnixTime.Time().Format(timeLayout),
+				colors.Magenta(op.Author.DisplayName()),
+				colors.Bold(op.Title),
+				op.UnixTime.Time().Format(timeLayout),
 			)
 			content, lines := text.Wrap(content, maxX)
 
@@ -307,12 +312,10 @@ func (sb *showBug) renderMain(g *gocui.Gui, mainView *gocui.View) error {
 			y0 += lines + 2
 
 		case *bug.SetStatusTimelineItem:
-			setStatus := op.(*bug.SetStatusTimelineItem)
-
 			content := fmt.Sprintf("%s %s the bug on %s",
-				colors.Magenta(setStatus.Author.DisplayName()),
-				colors.Bold(setStatus.Status.Action()),
-				setStatus.UnixTime.Time().Format(timeLayout),
+				colors.Magenta(op.Author.DisplayName()),
+				colors.Bold(op.Status.Action()),
+				op.UnixTime.Time().Format(timeLayout),
 			)
 			content, lines := text.Wrap(content, maxX)
 
@@ -324,15 +327,13 @@ func (sb *showBug) renderMain(g *gocui.Gui, mainView *gocui.View) error {
 			y0 += lines + 2
 
 		case *bug.LabelChangeTimelineItem:
-			labelChange := op.(*bug.LabelChangeTimelineItem)
-
 			var added []string
-			for _, label := range labelChange.Added {
+			for _, label := range op.Added {
 				added = append(added, colors.Bold("\""+label+"\""))
 			}
 
 			var removed []string
-			for _, label := range labelChange.Removed {
+			for _, label := range op.Removed {
 				removed = append(removed, colors.Bold("\""+label+"\""))
 			}
 
@@ -359,9 +360,9 @@ func (sb *showBug) renderMain(g *gocui.Gui, mainView *gocui.View) error {
 			}
 
 			content := fmt.Sprintf("%s %s on %s",
-				colors.Magenta(labelChange.Author.DisplayName()),
+				colors.Magenta(op.Author.DisplayName()),
 				action.String(),
-				labelChange.UnixTime.Time().Format(timeLayout),
+				op.UnixTime.Time().Format(timeLayout),
 			)
 			content, lines := text.Wrap(content, maxX)
 

@@ -1,0 +1,17 @@
+dist: bionic
+language: go
+
+go:
+  - "1.12.x"
+
+install:
+  - go build -v ./...
+
+script:
+  - go test -v ./...
+  - go test -run=^$ -bench=BenchmarkReference -benchmem
+  - ./s/test_with_codecoverage.sh
+  - ./s/ci_fuzzit.sh
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

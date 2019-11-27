@@ -25,6 +25,14 @@
   version = "v0.9.2"
 
 [[projects]]
+  branch = "master"
+  digest = "1:3bce3ea8b88a9f36739fab8c0f5f84babd8f1e0b553c1d26c51c65dc5c6348be"
+  name = "github.com/MichaelMure/go-term-markdown"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7c50fb89937dac8dc3643ea5848cf0412dbf6496"
+
+[[projects]]
   digest = "1:b46ef47d5fcc120e6fc1f75e75106f31cbb51fe9981234b5c191d0083d8f9867"
   name = "github.com/MichaelMure/go-term-text"
   packages = ["."]
@@ -39,6 +47,47 @@
   pruneopts = "UT"
   revision = "3d21ba515fe27b856f230847e856431ae1724adc"
   version = "v1.0.0"
+
+[[projects]]
+  digest = "1:e886db5bf3b3dd89a97e2b51afacc2929f6e791c564af058e8a4a65c1b67450d"
+  name = "github.com/alecthomas/chroma"
+  packages = [
+    ".",
+    "formatters",
+    "formatters/html",
+    "formatters/svg",
+    "lexers",
+    "lexers/a",
+    "lexers/b",
+    "lexers/c",
+    "lexers/circular",
+    "lexers/d",
+    "lexers/e",
+    "lexers/f",
+    "lexers/g",
+    "lexers/h",
+    "lexers/i",
+    "lexers/internal",
+    "lexers/j",
+    "lexers/k",
+    "lexers/l",
+    "lexers/m",
+    "lexers/n",
+    "lexers/o",
+    "lexers/p",
+    "lexers/q",
+    "lexers/r",
+    "lexers/s",
+    "lexers/t",
+    "lexers/v",
+    "lexers/w",
+    "lexers/x",
+    "lexers/y",
+    "styles",
+  ]
+  pruneopts = "UT"
+  revision = "28dcb8565c0eca2136ca9256a240a9fe2701b553"
+  version = "v0.7.0"
 
 [[projects]]
   branch = "master"
@@ -97,6 +146,14 @@
   version = "v1.0.8"
 
 [[projects]]
+  branch = "master"
+  digest = "1:710109527a119c813d4fac773712dd92f449ed7c2f7b81f49822f94d290c8f72"
+  name = "github.com/danwakefield/fnmatch"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "cbb64ac3d964b81592e64f957ad53df015803288"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -105,12 +162,39 @@
   version = "v1.1.1"
 
 [[projects]]
+  digest = "1:0e9469c594ba4968647dc76d12db8fb3b05dc9603fb05346e1f9dad267a41e86"
+  name = "github.com/disintegration/imaging"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "acabd8315e63bfcaac97d52d68a7a0b88d2eea93"
+  version = "v1.6.2"
+
+[[projects]]
+  digest = "1:26d73f0911e537e89d04011f7a65a5cd2d28113d551d4366480b4706b2833e3a"
+  name = "github.com/dlclark/regexp2"
+  packages = [
+    ".",
+    "syntax",
+  ]
+  pruneopts = "UT"
+  revision = "92c702aa5812963ef9193a9624191932d44073d7"
+  version = "v1.2.0"
+
+[[projects]]
   branch = "master"
   digest = "1:6f9339c912bbdda81302633ad7e99a28dfa5a639c864061f1929510a9a64aa74"
   name = "github.com/dustin/go-humanize"
   packages = ["."]
   pruneopts = "UT"
   revision = "9f541cc9db5d55bce703bd99987c9d5cb8eea45e"
+
+[[projects]]
+  digest = "1:8200d8bc3c223956f4ed7c9c69f41c02f61959058a0ab6ace618dbf39934a31f"
+  name = "github.com/eliukblau/pixterm"
+  packages = ["ansimage"]
+  pruneopts = "UT"
+  revision = "b5994edcb4dd8d40668253cb9fb04f256b26dea5"
+  version = "v1.2.4"
 
 [[projects]]
   digest = "1:865079840386857c809b72ce300be7580cb50d3d3129ce11bf9aa6ca2bc1934a"
@@ -135,6 +219,19 @@
   pruneopts = "UT"
   revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
   version = "v1.2.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:bac7d90ac5daf36114142fafc87ad1ff1b4471e1950f2f6947f8c3cdb7b337a3"
+  name = "github.com/gomarkdown/markdown"
+  packages = [
+    ".",
+    "ast",
+    "html",
+    "parser",
+  ]
+  pruneopts = "UT"
+  revision = "2c17d62f5098b558aeef3c9cae691b2dd655513b"
 
 [[projects]]
   digest = "1:a63cff6b5d8b95638bfe300385d93b2a6d9d687734b863da8e09dc834510a690"
@@ -186,6 +283,22 @@
   pruneopts = "UT"
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
   version = "v1.0"
+
+[[projects]]
+  digest = "1:ea7929b5ce35b109685e5c992ddf64d5b977cd915b2c050fc340d7d645c87418"
+  name = "github.com/kyokomi/emoji"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "eba9a9d7bfd64dcfe6e90fb3d53b2f3357a015c3"
+  version = "v2.1.0"
+
+[[projects]]
+  digest = "1:ce87064aaa97ee9598bffb4556f1cd6d513cf47791bb57ebc3f1619153f4d59f"
+  name = "github.com/lucasb-eyer/go-colorful"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d4cf663bea3fd1f57cfb5c8b5db17386162e1540"
+  version = "v0.9"
 
 [[projects]]
   digest = "1:c658e84ad3916da105a761660dcaeb01e63416c8ec7bc62256a9b411a05fcd67"
@@ -386,11 +499,30 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d6b719875cf8091fbab38527d81d34e71f4521b9ee9ccfbd4a32cff2ac5af96e"
+  digest = "1:9cf4739d15206a9cf696611677596beb04146a56b6330cf5b3e981cb865c6526"
+  name = "golang.org/x/image"
+  packages = [
+    "bmp",
+    "ccitt",
+    "riff",
+    "tiff",
+    "tiff/lzw",
+    "vp8",
+    "vp8l",
+    "webp",
+  ]
+  pruneopts = "UT"
+  revision = "e7c1f5e7dbb87d8921928a6d9fc52fb31ce73b24"
+
+[[projects]]
+  branch = "master"
+  digest = "1:4a66c9e7213ab74f46f00deff263391f9fb3c38ead93ec185559f0a6157ed77c"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
+    "html",
+    "html/atom",
   ]
   pruneopts = "UT"
   revision = "2f5d2388922f370f4355f327fcf4cfe9f5583908"
@@ -488,6 +620,7 @@
     "github.com/99designs/gqlgen/graphql",
     "github.com/99designs/gqlgen/graphql/introspection",
     "github.com/99designs/gqlgen/handler",
+    "github.com/MichaelMure/go-term-markdown",
     "github.com/MichaelMure/go-term-text",
     "github.com/araddon/dateparse",
     "github.com/awesome-gocui/gocui",

@@ -1,0 +1,7 @@
+checkoutLocation: "src/github.com/gomarkdown/markdown"
+workspaceLocation: "."
+tasks:
+  - command: >
+      cd /workspace/src/github.com/gomarkdown/markdown &&
+      go get -v ./... &&
+      go test -c

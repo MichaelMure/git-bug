@@ -1,0 +1,13 @@
+*.out
+*.swp
+*.8
+*.6
+_obj
+_test*
+markdown
+tags
+fuzz-workdir/
+markdown-fuzz.zip
+coverage.txt
+testdata/*_got.md
+testdata/*_ast.txt

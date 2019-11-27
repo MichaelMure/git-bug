@@ -87,3 +87,11 @@
 [[constraint]]
   branch = "master"
   name = "github.com/araddon/dateparse"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/MichaelMure/go-term-markdown"
+
+[[override]]
+  name = "github.com/lucasb-eyer/go-colorful"
+  version = "v0.9"
