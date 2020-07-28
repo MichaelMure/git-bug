@@ -29,6 +29,7 @@ const (
 )
 
 var bridgeImpl map[string]reflect.Type
+var bridgeValidParams map[string][]string
 var bridgeLoginMetaKey map[string]string
 
 // Bridge is a wrapper around a BridgeImpl that will bind low-level
@@ -52,8 +53,21 @@ func Register(impl BridgeImpl) {
 	if bridgeLoginMetaKey == nil {
 		bridgeLoginMetaKey = make(map[string]string)
 	}
+	if bridgeValidParams == nil {
+		bridgeValidParams = make(map[string][]string)
+	}
 	bridgeImpl[impl.Target()] = reflect.TypeOf(impl).Elem()
 	bridgeLoginMetaKey[impl.Target()] = impl.LoginMetaKey()
+
+	paramMap := impl.ValidParams()
+	params := make([]string, len(paramMap))
+
+	i := 0
+	for k := range paramMap {
+		params[i] = k
+		i++
+	}
+	bridgeValidParams[impl.Target()] = params
 }
 
 // Targets return all known bridge implementation target
@@ -67,6 +81,17 @@ func Targets() []string {
 	sort.Strings(result)
 
 	return result
+}
+
+// ValidParams returns the valid input parameters for configuring a target bridge
+func ValidParams(target string) ([]string, error) {
+	validParams, ok := bridgeValidParams[target]
+	if !ok {
+		return nil, fmt.Errorf("unknown bridge target %v", target)
+	}
+
+	sort.Strings(validParams)
+	return validParams, nil
 }
 
 // TargetExist return true if the given target has a bridge implementation

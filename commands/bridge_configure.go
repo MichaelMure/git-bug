@@ -31,59 +31,7 @@ func newBridgeConfigureCommand() *cobra.Command {
 		Use:   "configure",
 		Short: "Configure a new bridge.",
 		Long: `	Configure a new bridge by passing flags or/and using interactive terminal prompts. You can avoid all the terminal prompts by passing all the necessary flags to configure your bridge.`,
-		Example: `# Interactive example
-[1]: github
-[2]: gitlab
-[3]: jira
-[4]: launchpad-preview
-
-target: 1
-name [default]: default
-
-Detected projects:
-[1]: github.com/a-hilaly/git-bug
-[2]: github.com/MichaelMure/git-bug
-
-[0]: Another project
-
-Select option: 1
-
-[1]: user provided token
-[2]: interactive token creation
-Select option: 1
-
-You can generate a new token by visiting https://github.com/settings/tokens.
-Choose 'Generate new token' and set the necessary access scope for your repository.
-
-The access scope depend on the type of repository.
-Public:
-	- 'public_repo': to be able to read public repositories
-Private:
-	- 'repo'       : to be able to read private repositories
-
-Enter token: 87cf5c03b64029f18ea5f9ca5679daa08ccbd700
-Successfully configured bridge: default
-
-# For GitHub
-git bug bridge configure \
-    --name=default \
-    --target=github \
-    --owner=$(OWNER) \
-    --project=$(PROJECT) \
-    --token=$(TOKEN)
-
-# For Launchpad
-git bug bridge configure \
-    --name=default \
-    --target=launchpad-preview \
-	--url=https://bugs.launchpad.net/ubuntu/
-
-# For Gitlab
-git bug bridge configure \
-    --name=default \
-    --target=github \
-    --url=https://github.com/michaelmure/git-bug \
-    --token=$(TOKEN)`,
+		Example:  bridgeConfigureExample,
 		PreRunE:  loadBackend(env),
 		PostRunE: closeBackend(env),
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -107,26 +107,37 @@ Private:
 Enter token: 87cf5c03b64029f18ea5f9ca5679daa08ccbd700
 Successfully configured bridge: default
 
-# For GitHub
+# For Github
 git bug bridge configure \\
-    \-\-name=default \\
     \-\-target=github \\
-    \-\-owner=$(OWNER) \\
-    \-\-project=$(PROJECT) \\
-    \-\-token=$(TOKEN)
+    \-\-login==$(LOGIN) \\
+    \-\-owner==$(OWNER) \\
+    \-\-project==$(PROJECT) \\
+    \-\-token=$(TOKEN) \\
+    \-\-url=https://github.com/MichaelMure/git\-bug \\
 
-# For Launchpad
-git bug bridge configure \\
-    \-\-name=default \\
-    \-\-target=launchpad\-preview \\
-	\-\-url=https://bugs.launchpad.net/ubuntu/
 
 # For Gitlab
 git bug bridge configure \\
-    \-\-name=default \\
-    \-\-target=github \\
-    \-\-url=https://github.com/michaelmure/git\-bug \\
-    \-\-token=$(TOKEN)
+    \-\-target=gitlab \\
+    \-\-login==$(LOGIN) \\
+    \-\-token=$(TOKEN) \\
+    \-\-url=https://gitlab.com/gitlab\-org/gitlab \\
+
+
+# For Jira
+git bug bridge configure \\
+    \-\-target=jira \\
+    \-\-login==$(LOGIN) \\
+    \-\-project==$(PROJECT) \\
+
+
+# For Launchpad\-Preview
+git bug bridge configure \\
+    \-\-target=launchpad\-preview \\
+    \-\-project==$(PROJECT) \\
+    \-\-url=https://bugs.launchpad.net/ubuntu/ \\
+
 
 .fi
 .RE
