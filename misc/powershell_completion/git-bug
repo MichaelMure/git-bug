@@ -22,6 +22,7 @@ Register-ArgumentCompleter -Native -CommandName 'git-bug' -ScriptBlock {
             [CompletionResult]::new('commands', 'commands', [CompletionResultType]::ParameterValue, 'Display available commands.')
             [CompletionResult]::new('comment', 'comment', [CompletionResultType]::ParameterValue, 'Display or add comments to a bug.')
             [CompletionResult]::new('deselect', 'deselect', [CompletionResultType]::ParameterValue, 'Clear the implicitly selected bug.')
+            [CompletionResult]::new('export', 'export', [CompletionResultType]::ParameterValue, 'Export bugs as a series of operations.')
             [CompletionResult]::new('label', 'label', [CompletionResultType]::ParameterValue, 'Display, add or remove labels to/from a bug.')
             [CompletionResult]::new('ls', 'ls', [CompletionResultType]::ParameterValue, 'List bugs.')
             [CompletionResult]::new('ls-id', 'ls-id', [CompletionResultType]::ParameterValue, 'List bug identifiers.')
@@ -128,6 +129,27 @@ Register-ArgumentCompleter -Native -CommandName 'git-bug' -ScriptBlock {
             break
         }
         'git-bug;deselect' {
+            break
+        }
+        'git-bug;export' {
+            [CompletionResult]::new('-s', 's', [CompletionResultType]::ParameterName, 'Filter by status. Valid values are [open,closed]')
+            [CompletionResult]::new('--status', 'status', [CompletionResultType]::ParameterName, 'Filter by status. Valid values are [open,closed]')
+            [CompletionResult]::new('-a', 'a', [CompletionResultType]::ParameterName, 'Filter by author')
+            [CompletionResult]::new('--author', 'author', [CompletionResultType]::ParameterName, 'Filter by author')
+            [CompletionResult]::new('-p', 'p', [CompletionResultType]::ParameterName, 'Filter by participant')
+            [CompletionResult]::new('--participant', 'participant', [CompletionResultType]::ParameterName, 'Filter by participant')
+            [CompletionResult]::new('-A', 'A', [CompletionResultType]::ParameterName, 'Filter by actor')
+            [CompletionResult]::new('--actor', 'actor', [CompletionResultType]::ParameterName, 'Filter by actor')
+            [CompletionResult]::new('-l', 'l', [CompletionResultType]::ParameterName, 'Filter by label')
+            [CompletionResult]::new('--label', 'label', [CompletionResultType]::ParameterName, 'Filter by label')
+            [CompletionResult]::new('-t', 't', [CompletionResultType]::ParameterName, 'Filter by title')
+            [CompletionResult]::new('--title', 'title', [CompletionResultType]::ParameterName, 'Filter by title')
+            [CompletionResult]::new('-n', 'n', [CompletionResultType]::ParameterName, 'Filter by absence of something. Valid values are [label]')
+            [CompletionResult]::new('--no', 'no', [CompletionResultType]::ParameterName, 'Filter by absence of something. Valid values are [label]')
+            [CompletionResult]::new('-b', 'b', [CompletionResultType]::ParameterName, 'Sort the results by a characteristic. Valid values are [id,creation,edit]')
+            [CompletionResult]::new('--by', 'by', [CompletionResultType]::ParameterName, 'Sort the results by a characteristic. Valid values are [id,creation,edit]')
+            [CompletionResult]::new('-d', 'd', [CompletionResultType]::ParameterName, 'Select the sorting direction. Valid values are [asc,desc]')
+            [CompletionResult]::new('--direction', 'direction', [CompletionResultType]::ParameterName, 'Select the sorting direction. Valid values are [asc,desc]')
             break
         }
         'git-bug;label' {

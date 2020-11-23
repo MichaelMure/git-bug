@@ -1,0 +1,77 @@
+.nh
+.TH "GIT\-BUG" "1" "Apr 2019" "Generated from git\-bug's source code" ""
+
+.SH NAME
+.PP
+git\-bug\-export \- Export bugs as a series of operations.
+
+
+.SH SYNOPSIS
+.PP
+\fBgit\-bug export [QUERY] [flags]\fP
+
+
+.SH DESCRIPTION
+.PP
+Export bugs as a series of operations.
+
+.PP
+You can pass an additional query to filter and order the list. This query can be expressed either with a simple query language, flags, a natural language full text search, or a combination of the aforementioned.
+
+
+.SH OPTIONS
+.PP
+\fB\-s\fP, \fB\-\-status\fP=[]
+	Filter by status. Valid values are [open,closed]
+
+.PP
+\fB\-a\fP, \fB\-\-author\fP=[]
+	Filter by author
+
+.PP
+\fB\-p\fP, \fB\-\-participant\fP=[]
+	Filter by participant
+
+.PP
+\fB\-A\fP, \fB\-\-actor\fP=[]
+	Filter by actor
+
+.PP
+\fB\-l\fP, \fB\-\-label\fP=[]
+	Filter by label
+
+.PP
+\fB\-t\fP, \fB\-\-title\fP=[]
+	Filter by title
+
+.PP
+\fB\-n\fP, \fB\-\-no\fP=[]
+	Filter by absence of something. Valid values are [label]
+
+.PP
+\fB\-b\fP, \fB\-\-by\fP="creation"
+	Sort the results by a characteristic. Valid values are [id,creation,edit]
+
+.PP
+\fB\-d\fP, \fB\-\-direction\fP="asc"
+	Select the sorting direction. Valid values are [asc,desc]
+
+.PP
+\fB\-h\fP, \fB\-\-help\fP[=false]
+	help for export
+
+
+.SH EXAMPLE
+.PP
+.RS
+
+.nf
+See ls
+
+.fi
+.RE
+
+
+.SH SEE ALSO
+.PP
+\fBgit\-bug(1)\fP

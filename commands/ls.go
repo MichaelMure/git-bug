@@ -16,7 +16,7 @@ import (
 	"github.com/MichaelMure/git-bug/util/colors"
 )
 
-type lsOptions struct {
+type queryOptions struct {
 	statusQuery      []string
 	authorQuery      []string
 	participantQuery []string
@@ -26,7 +26,12 @@ type lsOptions struct {
 	noQuery          []string
 	sortBy           string
 	sortDirection    string
-	outputFormat     string
+}
+
+type lsOptions struct {
+	queryOptions
+
+	outputFormat string
 }
 
 func newLsCommand() *cobra.Command {
@@ -86,26 +91,7 @@ git bug ls status:open --by creation "foo bar" baz
 }
 
 func runLs(env *Env, opts lsOptions, args []string) error {
-	var q *query.Query
-	var err error
-
-	if len(args) >= 1 {
-		// either the shell or cobra remove the quotes, we need them back for the parsing
-		for i, arg := range args {
-			if strings.Contains(arg, " ") {
-				args[i] = fmt.Sprintf("\"%s\"", arg)
-			}
-		}
-		assembled := strings.Join(args, " ")
-		q, err = query.Parse(assembled)
-		if err != nil {
-			return err
-		}
-	} else {
-		q = query.NewQuery()
-	}
-
-	err = completeQuery(q, opts)
+	q, err := makeQuery(args, &opts.queryOptions)
 	if err != nil {
 		return err
 	}
@@ -324,11 +310,30 @@ func lsOrgmodeFormatter(env *Env, bugExcerpts []*cache.BugExcerpt) error {
 }
 
 // Finish the command flags transformation into the query.Query
-func completeQuery(q *query.Query, opts lsOptions) error {
+func makeQuery(args []string, opts *queryOptions) (*query.Query, error) {
+	var q *query.Query
+	var err error
+
+	if len(args) >= 1 {
+		// either the shell or cobra remove the quotes, we need them back for the parsing
+		for i, arg := range args {
+			if strings.Contains(arg, " ") {
+				args[i] = fmt.Sprintf("\"%s\"", arg)
+			}
+		}
+		assembled := strings.Join(args, " ")
+		q, err = query.Parse(assembled)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		q = query.NewQuery()
+	}
+
 	for _, str := range opts.statusQuery {
 		status, err := bug.StatusFromString(str)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		q.Status = append(q.Status, status)
 	}
@@ -344,7 +349,7 @@ func completeQuery(q *query.Query, opts lsOptions) error {
 		case "label":
 			q.NoLabel = true
 		default:
-			return fmt.Errorf("unknown \"no\" filter %s", no)
+			return nil, fmt.Errorf("unknown \"no\" filter %s", no)
 		}
 	}
 
@@ -356,7 +361,7 @@ func completeQuery(q *query.Query, opts lsOptions) error {
 	case "edit":
 		q.OrderBy = query.OrderByEdit
 	default:
-		return fmt.Errorf("unknown sort flag %s", opts.sortBy)
+		return nil, fmt.Errorf("unknown sort flag %s", opts.sortBy)
 	}
 
 	switch opts.sortDirection {
@@ -365,8 +370,8 @@ func completeQuery(q *query.Query, opts lsOptions) error {
 	case "desc":
 		q.OrderDirection = query.OrderDescending
 	default:
-		return fmt.Errorf("unknown sort direction %s", opts.sortDirection)
+		return nil, fmt.Errorf("unknown sort direction %s", opts.sortDirection)
 	}
 
-	return nil
+	return q, nil
 }
