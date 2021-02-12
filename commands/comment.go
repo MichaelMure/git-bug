@@ -19,6 +19,7 @@ func newCommentCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runComment(env, args)
 		},
+		ValidArgsFunction: completeBug(env),
 	}
 
 	cmd.AddCommand(newCommentAddCommand())

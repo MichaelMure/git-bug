@@ -16,6 +16,7 @@ func newStatusCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runStatus(env, args)
 		},
+		ValidArgsFunction: completeBug(env),
 	}
 
 	cmd.AddCommand(newStatusCloseCommand())

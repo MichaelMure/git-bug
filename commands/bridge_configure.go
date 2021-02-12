@@ -97,6 +97,7 @@ git bug bridge configure \
 	flags.StringVarP(&options.name, "name", "n", "", "A distinctive name to identify the bridge")
 	flags.StringVarP(&options.target, "target", "t", "",
 		fmt.Sprintf("The target of the bridge. Valid values are [%s]", strings.Join(bridge.Targets(), ",")))
+	cmd.RegisterFlagCompletionFunc("target", completeFrom(bridge.Targets()))
 	flags.StringVarP(&options.params.URL, "url", "u", "", "The URL of the remote repository")
 	flags.StringVarP(&options.params.BaseURL, "base-url", "b", "", "The base URL of your remote issue tracker")
 	flags.StringVarP(&options.params.Login, "login", "l", "", "The login on your remote issue tracker")

@@ -30,13 +30,17 @@ func newShowCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runShow(env, options, args)
 		},
+		ValidArgsFunction: completeBug(env),
 	}
 
 	flags := cmd.Flags()
 	flags.SortFlags = false
 
+	fields := []string{"author", "authorEmail", "createTime", "lastEdit", "humanId",
+		"id", "labels", "shortId", "status", "title", "actors", "participants"}
 	flags.StringVarP(&options.fields, "field", "", "",
-		"Select field to display. Valid values are [author,authorEmail,createTime,lastEdit,humanId,id,labels,shortId,status,title,actors,participants]")
+		"Select field to display. Valid values are ["+strings.Join(fields, ",")+"]")
+	cmd.RegisterFlagCompletionFunc("by", completeFrom(fields))
 	flags.StringVarP(&options.format, "format", "f", "default",
 		"Select the output formatting style. Valid values are [default,json,org-mode]")
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sync"
 
 	"github.com/spf13/cobra"
 
@@ -21,22 +20,15 @@ func main() {
 		"ZSH":        genZsh,
 	}
 
-	var wg sync.WaitGroup
 	for name, f := range tasks {
-		wg.Add(1)
-		go func(name string, f func(*cobra.Command) error) {
-			defer wg.Done()
-			root := commands.NewRootCommand()
-			err := f(root)
-			if err != nil {
-				fmt.Printf("  - %s: %v\n", name, err)
-				return
-			}
-			fmt.Printf("  - %s: ok\n", name)
-		}(name, f)
+		root := commands.NewRootCommand()
+		err := f(root)
+		if err != nil {
+			fmt.Printf("  - %s: %v\n", name, err)
+			continue
+		}
+		fmt.Printf("  - %s: ok\n", name)
 	}
-
-	wg.Wait()
 }
 
 func genBash(root *cobra.Command) error {

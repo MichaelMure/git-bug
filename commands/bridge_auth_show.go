@@ -22,7 +22,8 @@ func newBridgeAuthShow() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runBridgeAuthShow(env, args)
 		},
-		Args: cobra.ExactArgs(1),
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: completeBridgeAuth(env),
 	}
 
 	return cmd

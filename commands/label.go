@@ -17,6 +17,7 @@ func newLabelCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runLabel(env, args)
 		},
+		ValidArgsFunction: completeBug(env),
 	}
 
 	cmd.AddCommand(newLabelAddCommand())

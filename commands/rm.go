@@ -18,6 +18,7 @@ func newRmCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runRm(env, args)
 		},
+		ValidArgsFunction: completeBug(env),
 	}
 
 	flags := cmd.Flags()

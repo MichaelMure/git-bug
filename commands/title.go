@@ -16,6 +16,7 @@ func newTitleCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runTitle(env, args)
 		},
+		ValidArgsFunction: completeBug(env),
 	}
 
 	cmd.AddCommand(newTitleEditCommand())

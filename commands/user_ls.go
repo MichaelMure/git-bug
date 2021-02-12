@@ -33,6 +33,7 @@ func newUserLsCommand() *cobra.Command {
 
 	flags.StringVarP(&options.format, "format", "f", "default",
 		"Select the output formatting style. Valid values are [default,json]")
+	cmd.RegisterFlagCompletionFunc("format", completeFrom([]string{"default", "json"}))
 
 	return cmd
 }

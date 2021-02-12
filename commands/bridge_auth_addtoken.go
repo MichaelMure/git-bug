@@ -42,10 +42,12 @@ func newBridgeAuthAddTokenCommand() *cobra.Command {
 
 	flags.StringVarP(&options.target, "target", "t", "",
 		fmt.Sprintf("The target of the bridge. Valid values are [%s]", strings.Join(bridge.Targets(), ",")))
+	cmd.RegisterFlagCompletionFunc("target", completeFrom(bridge.Targets()))
 	flags.StringVarP(&options.login,
 		"login", "l", "", "The login in the remote bug-tracker")
 	flags.StringVarP(&options.user,
 		"user", "u", "", "The user to add the token to. Default is the current user")
+	cmd.RegisterFlagCompletionFunc("user", completeUser(env))
 
 	return cmd
 }

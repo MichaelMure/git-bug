@@ -16,6 +16,7 @@ func newUserAdoptCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runUserAdopt(env, args)
 		},
+		ValidArgsFunction: completeUser(env),
 	}
 
 	return cmd

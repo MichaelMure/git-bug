@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -25,6 +26,7 @@ func newUserCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runUser(env, options, args)
 		},
+		ValidArgsFunction: completeUser(env),
 	}
 
 	cmd.AddCommand(newUserAdoptCommand())
@@ -34,8 +36,10 @@ func newUserCommand() *cobra.Command {
 	flags := cmd.Flags()
 	flags.SortFlags = false
 
+	fields := []string{"email", "humanId", "id", "lastModification", "lastModificationLamport", "login", "metadata", "name"}
 	flags.StringVarP(&options.fields, "field", "f", "",
-		"Select field to display. Valid values are [email,humanId,id,lastModification,lastModificationLamport,login,metadata,name]")
+		"Select field to display. Valid values are ["+strings.Join(fields, ",")+"]")
+	cmd.RegisterFlagCompletionFunc("field", completeFrom(fields))
 
 	return cmd
 }
