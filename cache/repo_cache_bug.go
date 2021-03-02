@@ -403,12 +403,18 @@ func (c *RepoCache) NewBug(title string, message string) (*BugCache, *bug.Create
 // NewBugWithFiles create a new bug with attached files for the message
 // The new bug is written in the repository (commit)
 func (c *RepoCache) NewBugWithFiles(title string, message string, files []repository.Hash) (*BugCache, *bug.CreateOperation, error) {
+	return c.NewBugWithFilesAndTime(time.Now().Unix(), title, message, files)
+}
+
+// NewBugWithFiles create a new bug with attached files for the message and timestamp
+// The new bug is written in the repository (commit)
+func (c *RepoCache) NewBugWithFilesAndTime(unixTime int64, title string, message string, files []repository.Hash) (*BugCache, *bug.CreateOperation, error) {
 	author, err := c.GetUserIdentity()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return c.NewBugRaw(author, time.Now().Unix(), title, message, files, nil)
+	return c.NewBugRaw(author, unixTime, title, message, files, nil)
 }
 
 // NewBugWithFilesMeta create a new bug with attached files for the message, as

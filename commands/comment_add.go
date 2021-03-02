@@ -5,11 +5,14 @@ import (
 
 	_select "github.com/MichaelMure/git-bug/commands/select"
 	"github.com/MichaelMure/git-bug/input"
+
+	"time"
 )
 
 type commentAddOptions struct {
 	messageFile string
 	message     string
+	unixTime    int64
 }
 
 func newCommentAddCommand() *cobra.Command {
@@ -34,6 +37,9 @@ func newCommentAddCommand() *cobra.Command {
 
 	flags.StringVarP(&options.message, "message", "m", "",
 		"Provide the new message from the command line")
+
+	flags.Int64VarP(&options.unixTime, "time", "u", 0,
+		"Set the unix timestamp of the commit, in seconds since 1970-01-01")
 
 	return cmd
 }
@@ -62,7 +68,11 @@ func runCommentAdd(env *Env, opts commentAddOptions, args []string) error {
 		}
 	}
 
-	_, err = b.AddComment(opts.message)
+	if opts.unixTime == 0 {
+		opts.unixTime = time.Now().Unix()
+	}
+
+	_, err = b.AddCommentWithFilesAndTime(opts.unixTime, opts.message, nil)
 	if err != nil {
 		return err
 	}

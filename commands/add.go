@@ -4,12 +4,15 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/MichaelMure/git-bug/input"
+
+	"time"
 )
 
 type addOptions struct {
 	title       string
 	message     string
 	messageFile string
+	unixTime    int64
 }
 
 func newAddCommand() *cobra.Command {
@@ -35,6 +38,8 @@ func newAddCommand() *cobra.Command {
 		"Provide a message to describe the issue")
 	flags.StringVarP(&options.messageFile, "file", "F", "",
 		"Take the message from the given file. Use - to read the message from the standard input")
+	flags.Int64VarP(&options.unixTime, "time", "u", 0,
+		"Set the unix timestamp of the commit, in seconds since 1970-01-01")
 
 	return cmd
 }
@@ -60,7 +65,12 @@ func runAdd(env *Env, opts addOptions) error {
 		}
 	}
 
-	b, _, err := env.backend.NewBug(opts.title, opts.message)
+	if opts.unixTime == 0 {
+		opts.unixTime = time.Now().Unix()
+	}
+
+	b, _, err := env.backend.NewBugWithFilesAndTime(opts.unixTime, opts.title, opts.message, nil)
+
 	if err != nil {
 		return err
 	}
