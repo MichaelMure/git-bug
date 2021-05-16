@@ -72,7 +72,7 @@ git bug bridge configure \
 
 ```
   -n, --name string         A distinctive name to identify the bridge
-  -t, --target string       The target of the bridge. Valid values are [github,gitlab,jira,launchpad-preview]
+  -t, --target string       The target of the bridge. Valid values are [gitea-preview,github,gitlab,jira,launchpad-preview]
   -u, --url string          The URL of the remote repository
   -b, --base-url string     The base URL of your remote issue tracker
   -l, --login string        The login on your remote issue tracker
