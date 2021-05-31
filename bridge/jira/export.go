@@ -101,16 +101,22 @@ func (je *jiraExporter) cacheAllClient(ctx context.Context, repo *cache.RepoCach
 			continue
 		}
 
-		user, err := repo.ResolveIdentityImmutableMetadata(metaKeyJiraLogin, login)
-		if err == identity.ErrIdentityNotExist {
-			continue
+		explicitIdentity, ok := cred.GetMetadata(auth.MetaKeyIdentity)
+		var user *cache.IdentityCache
+		if ok {
+			user, err = repo.ResolveIdentityPrefix(explicitIdentity)
+		} else {
+			user, err = repo.ResolveIdentityImmutableMetadata(metaKeyJiraLogin, login)
+			if err == identity.ErrIdentityNotExist {
+				continue
+			}
 		}
 		if err != nil {
 			return nil
 		}
 
 		if _, ok := je.identityClient[user.Id()]; !ok {
-			client, err := buildClient(ctx, je.conf[confKeyBaseUrl], je.conf[confKeyCredentialType], creds[0])
+			client, err := buildClient(ctx, je.conf[confKeyBaseUrl], je.conf[confKeyCredentialType], cred)
 			if err != nil {
 				return err
 			}
