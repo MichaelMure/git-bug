@@ -10,7 +10,6 @@ import (
 
 	"github.com/MichaelMure/git-bug/bridge/core"
 	"github.com/MichaelMure/git-bug/bridge/core/auth"
-	"github.com/MichaelMure/git-bug/bridge/gitlab/iterator"
 	"github.com/MichaelMure/git-bug/bug"
 	"github.com/MichaelMure/git-bug/cache"
 	"github.com/MichaelMure/git-bug/entity"
@@ -23,9 +22,6 @@ type gitlabImporter struct {
 
 	// default client
 	client *gitlab.Client
-
-	// iterator
-	iterator *iterator.Iterator
 
 	// send only channel
 	out chan<- core.ImportResult
@@ -59,18 +55,15 @@ func (gi *gitlabImporter) Init(_ context.Context, repo *cache.RepoCache, conf co
 // ImportAll iterate over all the configured repository issues (notes) and ensure the creation
 // of the missing issues / comments / label events / title changes ...
 func (gi *gitlabImporter) ImportAll(ctx context.Context, repo *cache.RepoCache, since time.Time) (<-chan core.ImportResult, error) {
-	gi.iterator = iterator.NewIterator(ctx, gi.client, 10, gi.conf[confKeyProjectID], since)
+
 	out := make(chan core.ImportResult)
 	gi.out = out
 
 	go func() {
-		defer close(gi.out)
+		defer close(out)
 
-		// Loop over all matching issues
-		for gi.iterator.NextIssue() {
-			issue := gi.iterator.IssueValue()
+		for issue := range Issues(ctx, gi.client, gi.conf[confKeyProjectID], since) {
 
-			// create issue
 			b, err := gi.ensureIssue(repo, issue)
 			if err != nil {
 				err := fmt.Errorf("issue creation: %v", err)
@@ -78,23 +71,14 @@ func (gi *gitlabImporter) ImportAll(ctx context.Context, repo *cache.RepoCache, 
 				return
 			}
 
-			// Loop over all notes
-			for gi.iterator.NextNote() {
-				note := gi.iterator.NoteValue()
-				if err := gi.ensureNote(repo, b, note); err != nil {
-					err := fmt.Errorf("note creation: %v", err)
-					out <- core.NewImportError(err, entity.Id(strconv.Itoa(note.ID)))
-					return
+			for _, e := range SortedEvents(IssueEvents(ctx, gi.client, issue)) {
+				if e, ok := e.(ErrorEvent); ok {
+					out <- core.NewImportError(e.Err, "")
+					continue
 				}
-			}
-
-			// Loop over all label events
-			for gi.iterator.NextLabelEvent() {
-				labelEvent := gi.iterator.LabelEventValue()
-				if err := gi.ensureLabelEvent(repo, b, labelEvent); err != nil {
-					err := fmt.Errorf("label event creation: %v", err)
-					out <- core.NewImportError(err, entity.Id(strconv.Itoa(labelEvent.ID)))
-					return
+				if err := gi.ensureIssueEvent(repo, b, issue, e); err != nil {
+					err := fmt.Errorf("issue event creation: %v", err)
+					out <- core.NewImportError(err, entity.Id(e.ID()))
 				}
 			}
 
@@ -106,10 +90,6 @@ func (gi *gitlabImporter) ImportAll(ctx context.Context, repo *cache.RepoCache, 
 				out <- core.NewImportError(err, "")
 				return
 			}
-		}
-
-		if err := gi.iterator.Error(); err != nil {
-			out <- core.NewImportError(err, "")
 		}
 	}()
 
@@ -126,7 +106,7 @@ func (gi *gitlabImporter) ensureIssue(repo *cache.RepoCache, issue *gitlab.Issue
 	// resolve bug
 	b, err := repo.ResolveBugMatcher(func(excerpt *cache.BugExcerpt) bool {
 		return excerpt.CreateMetadata[core.MetaKeyOrigin] == target &&
-			excerpt.CreateMetadata[metaKeyGitlabId] == parseID(issue.IID) &&
+			excerpt.CreateMetadata[metaKeyGitlabId] == fmt.Sprintf("%d", issue.IID) &&
 			excerpt.CreateMetadata[metaKeyGitlabBaseUrl] == gi.conf[confKeyGitlabBaseUrl] &&
 			excerpt.CreateMetadata[metaKeyGitlabProject] == gi.conf[confKeyProjectID]
 	})
@@ -146,7 +126,7 @@ func (gi *gitlabImporter) ensureIssue(repo *cache.RepoCache, issue *gitlab.Issue
 		nil,
 		map[string]string{
 			core.MetaKeyOrigin:   target,
-			metaKeyGitlabId:      parseID(issue.IID),
+			metaKeyGitlabId:      fmt.Sprintf("%d", issue.IID),
 			metaKeyGitlabUrl:     issue.WebURL,
 			metaKeyGitlabProject: gi.conf[confKeyProjectID],
 			metaKeyGitlabBaseUrl: gi.conf[confKeyGitlabBaseUrl],
@@ -163,50 +143,49 @@ func (gi *gitlabImporter) ensureIssue(repo *cache.RepoCache, issue *gitlab.Issue
 	return b, nil
 }
 
-func (gi *gitlabImporter) ensureNote(repo *cache.RepoCache, b *cache.BugCache, note *gitlab.Note) error {
-	gitlabID := parseID(note.ID)
+func (gi *gitlabImporter) ensureIssueEvent(repo *cache.RepoCache, b *cache.BugCache, issue *gitlab.Issue, event Event) error {
 
-	id, errResolve := b.ResolveOperationWithMetadata(metaKeyGitlabId, gitlabID)
+	id, errResolve := b.ResolveOperationWithMetadata(metaKeyGitlabId, event.ID())
 	if errResolve != nil && errResolve != cache.ErrNoMatchingOp {
 		return errResolve
 	}
 
 	// ensure issue author
-	author, err := gi.ensurePerson(repo, note.Author.ID)
+	author, err := gi.ensurePerson(repo, event.UserID())
 	if err != nil {
 		return err
 	}
 
-	noteType, body := GetNoteType(note)
-	switch noteType {
-	case NOTE_CLOSED:
+	switch event.Kind() {
+	case EventClosed:
 		if errResolve == nil {
 			return nil
 		}
 
 		op, err := b.CloseRaw(
 			author,
-			note.CreatedAt.Unix(),
+			event.CreatedAt().Unix(),
 			map[string]string{
-				metaKeyGitlabId: gitlabID,
+				metaKeyGitlabId: event.ID(),
 			},
 		)
+
 		if err != nil {
 			return err
 		}
 
 		gi.out <- core.NewImportStatusChange(op.Id())
 
-	case NOTE_REOPENED:
+	case EventReopened:
 		if errResolve == nil {
 			return nil
 		}
 
 		op, err := b.OpenRaw(
 			author,
-			note.CreatedAt.Unix(),
+			event.CreatedAt().Unix(),
 			map[string]string{
-				metaKeyGitlabId: gitlabID,
+				metaKeyGitlabId: event.ID(),
 			},
 		)
 		if err != nil {
@@ -215,9 +194,7 @@ func (gi *gitlabImporter) ensureNote(repo *cache.RepoCache, b *cache.BugCache, n
 
 		gi.out <- core.NewImportStatusChange(op.Id())
 
-	case NOTE_DESCRIPTION_CHANGED:
-		issue := gi.iterator.IssueValue()
-
+	case EventDescriptionChanged:
 		firstComment := b.Snapshot().Comments[0]
 		// since gitlab doesn't provide the issue history
 		// we should check for "changed the description" notes and compare issue texts
@@ -226,11 +203,11 @@ func (gi *gitlabImporter) ensureNote(repo *cache.RepoCache, b *cache.BugCache, n
 			// comment edition
 			op, err := b.EditCommentRaw(
 				author,
-				note.UpdatedAt.Unix(),
+				event.(NoteEvent).UpdatedAt.Unix(),
 				firstComment.Id(),
 				text.Cleanup(issue.Description),
 				map[string]string{
-					metaKeyGitlabId: gitlabID,
+					metaKeyGitlabId: event.ID(),
 				},
 			)
 			if err != nil {
@@ -240,8 +217,8 @@ func (gi *gitlabImporter) ensureNote(repo *cache.RepoCache, b *cache.BugCache, n
 			gi.out <- core.NewImportTitleEdition(op.Id())
 		}
 
-	case NOTE_COMMENT:
-		cleanText := text.Cleanup(body)
+	case EventComment:
+		cleanText := text.Cleanup(event.(NoteEvent).Body)
 
 		// if we didn't import the comment
 		if errResolve == cache.ErrNoMatchingOp {
@@ -249,11 +226,11 @@ func (gi *gitlabImporter) ensureNote(repo *cache.RepoCache, b *cache.BugCache, n
 			// add comment operation
 			op, err := b.AddCommentRaw(
 				author,
-				note.CreatedAt.Unix(),
+				event.CreatedAt().Unix(),
 				cleanText,
 				nil,
 				map[string]string{
-					metaKeyGitlabId: gitlabID,
+					metaKeyGitlabId: event.ID(),
 				},
 			)
 			if err != nil {
@@ -271,12 +248,12 @@ func (gi *gitlabImporter) ensureNote(repo *cache.RepoCache, b *cache.BugCache, n
 			return err
 		}
 
-		// compare local bug comment with the new note body
+		// compare local bug comment with the new event body
 		if comment.Message != cleanText {
 			// comment edition
 			op, err := b.EditCommentRaw(
 				author,
-				note.UpdatedAt.Unix(),
+				event.(NoteEvent).UpdatedAt.Unix(),
 				comment.Id(),
 				cleanText,
 				nil,
@@ -290,7 +267,7 @@ func (gi *gitlabImporter) ensureNote(repo *cache.RepoCache, b *cache.BugCache, n
 
 		return nil
 
-	case NOTE_TITLE_CHANGED:
+	case EventTitleChanged:
 		// title change events are given new notes
 		if errResolve == nil {
 			return nil
@@ -298,10 +275,10 @@ func (gi *gitlabImporter) ensureNote(repo *cache.RepoCache, b *cache.BugCache, n
 
 		op, err := b.SetTitleRaw(
 			author,
-			note.CreatedAt.Unix(),
-			text.CleanupOneLine(body),
+			event.CreatedAt().Unix(),
+			event.(NoteEvent).Title(),
 			map[string]string{
-				metaKeyGitlabId: gitlabID,
+				metaKeyGitlabId: event.ID(),
 			},
 		)
 		if err != nil {
@@ -310,67 +287,48 @@ func (gi *gitlabImporter) ensureNote(repo *cache.RepoCache, b *cache.BugCache, n
 
 		gi.out <- core.NewImportTitleEdition(op.Id())
 
-	case NOTE_UNKNOWN,
-		NOTE_ASSIGNED,
-		NOTE_UNASSIGNED,
-		NOTE_CHANGED_MILESTONE,
-		NOTE_REMOVED_MILESTONE,
-		NOTE_CHANGED_DUEDATE,
-		NOTE_REMOVED_DUEDATE,
-		NOTE_LOCKED,
-		NOTE_UNLOCKED,
-		NOTE_MENTIONED_IN_ISSUE,
-		NOTE_MENTIONED_IN_MERGE_REQUEST:
+	case EventAddLabel:
+		_, err = b.ForceChangeLabelsRaw(
+			author,
+			event.CreatedAt().Unix(),
+			[]string{event.(LabelEvent).Label.Name},
+			nil,
+			map[string]string{
+				metaKeyGitlabId: event.ID(),
+			},
+		)
+		return err
+
+	case EventRemoveLabel:
+		_, err = b.ForceChangeLabelsRaw(
+			author,
+			event.CreatedAt().Unix(),
+			nil,
+			[]string{event.(LabelEvent).Label.Name},
+			map[string]string{
+				metaKeyGitlabId: event.ID(),
+			},
+		)
+		return err
+
+	case EventAssigned,
+		EventUnassigned,
+		EventChangedMilestone,
+		EventRemovedMilestone,
+		EventChangedDuedate,
+		EventRemovedDuedate,
+		EventLocked,
+		EventUnlocked,
+		EventMentionedInIssue,
+		EventMentionedInMergeRequest:
 
 		return nil
 
 	default:
-		panic("unhandled note type")
+		return fmt.Errorf("unexpected event")
 	}
 
 	return nil
-}
-
-func (gi *gitlabImporter) ensureLabelEvent(repo *cache.RepoCache, b *cache.BugCache, labelEvent *gitlab.LabelEvent) error {
-	_, err := b.ResolveOperationWithMetadata(metaKeyGitlabId, parseID(labelEvent.ID))
-	if err != cache.ErrNoMatchingOp {
-		return err
-	}
-
-	// ensure issue author
-	author, err := gi.ensurePerson(repo, labelEvent.User.ID)
-	if err != nil {
-		return err
-	}
-
-	switch labelEvent.Action {
-	case "add":
-		_, err = b.ForceChangeLabelsRaw(
-			author,
-			labelEvent.CreatedAt.Unix(),
-			[]string{text.CleanupOneLine(labelEvent.Label.Name)},
-			nil,
-			map[string]string{
-				metaKeyGitlabId: parseID(labelEvent.ID),
-			},
-		)
-
-	case "remove":
-		_, err = b.ForceChangeLabelsRaw(
-			author,
-			labelEvent.CreatedAt.Unix(),
-			nil,
-			[]string{text.CleanupOneLine(labelEvent.Label.Name)},
-			map[string]string{
-				metaKeyGitlabId: parseID(labelEvent.ID),
-			},
-		)
-
-	default:
-		err = fmt.Errorf("unexpected label event action")
-	}
-
-	return err
 }
 
 func (gi *gitlabImporter) ensurePerson(repo *cache.RepoCache, id int) (*cache.IdentityCache, error) {
@@ -406,8 +364,4 @@ func (gi *gitlabImporter) ensurePerson(repo *cache.RepoCache, id int) (*cache.Id
 
 	gi.out <- core.NewImportIdentity(i.Id())
 	return i, nil
-}
-
-func parseID(id int) string {
-	return fmt.Sprintf("%d", id)
 }
