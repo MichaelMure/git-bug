@@ -11,7 +11,7 @@ import (
 
 type TimelineItem interface {
 	// ID return the identifier of the item
-	Id() entity.Id
+	Id() entity.CombinedId
 }
 
 // CommentHistoryStep hold one version of a message in the history
@@ -27,7 +27,7 @@ type CommentHistoryStep struct {
 // CommentTimelineItem is a TimelineItem that holds a Comment and its edition history
 type CommentTimelineItem struct {
 	// id should be the same as in Comment
-	id        entity.Id
+	id        entity.CombinedId
 	Author    identity.Interface
 	Message   string
 	Files     []repository.Hash
@@ -53,7 +53,7 @@ func NewCommentTimelineItem(comment Comment) CommentTimelineItem {
 	}
 }
 
-func (c *CommentTimelineItem) Id() entity.Id {
+func (c *CommentTimelineItem) Id() entity.CombinedId {
 	return c.id
 }
 

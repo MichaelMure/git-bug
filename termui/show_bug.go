@@ -645,7 +645,7 @@ func (sb *showBug) edit(g *gocui.Gui, v *gocui.View) error {
 		return nil
 	}
 
-	op, err := snap.SearchTimelineItem(entity.Id(sb.selected))
+	op, err := snap.SearchTimelineItem(entity.CombinedId(sb.selected))
 	if err != nil {
 		return err
 	}

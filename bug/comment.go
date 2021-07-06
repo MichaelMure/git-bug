@@ -13,7 +13,7 @@ import (
 type Comment struct {
 	// id should be the result of entity.CombineIds with the Bug id and the id
 	// of the Operation that created the comment
-	id      entity.Id
+	id      entity.CombinedId
 	Author  identity.Interface
 	Message string
 	Files   []repository.Hash
@@ -24,7 +24,7 @@ type Comment struct {
 }
 
 // Id return the Comment identifier
-func (c Comment) Id() entity.Id {
+func (c Comment) Id() entity.CombinedId {
 	if c.id == "" {
 		// simply panic as it would be a coding error (no id provided at construction)
 		panic("no id")

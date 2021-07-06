@@ -1,8 +1,72 @@
 package entity
 
 import (
+	"fmt"
+	"io"
 	"strings"
+
+	"github.com/pkg/errors"
 )
+
+const UnsetCombinedId = CombinedId("unset")
+
+// CombinedId is an Id holding information from both a primary Id and a secondary Id.
+// While it looks like a regular Id, do not just cast from one to another.
+// Instead, use CombineIds and SeparateIds to create it and split it.
+type CombinedId string
+
+// String return the identifier as a string
+func (ci CombinedId) String() string {
+	return string(ci)
+}
+
+// Human return the identifier, shortened for human consumption
+func (ci CombinedId) Human() string {
+	format := fmt.Sprintf("%%.%ds", humanIdLength)
+	return fmt.Sprintf(format, ci)
+}
+
+func (ci CombinedId) HasPrefix(prefix string) bool {
+	return strings.HasPrefix(string(ci), prefix)
+}
+
+// UnmarshalGQL implement the Unmarshaler interface for gqlgen
+func (ci *CombinedId) UnmarshalGQL(v interface{}) error {
+	_, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("IDs must be strings")
+	}
+
+	*ci = v.(CombinedId)
+
+	if err := ci.Validate(); err != nil {
+		return errors.Wrap(err, "invalid ID")
+	}
+
+	return nil
+}
+
+// MarshalGQL implement the Marshaler interface for gqlgen
+func (ci CombinedId) MarshalGQL(w io.Writer) {
+	_, _ = w.Write([]byte(`"` + ci.String() + `"`))
+}
+
+// IsValid tell if the Id is valid
+func (ci CombinedId) Validate() error {
+	// Special case to detect outdated repo
+	if len(ci) == 40 {
+		return fmt.Errorf("outdated repository format, please use https://github.com/MichaelMure/git-bug-migration to upgrade")
+	}
+	if len(ci) != idLength {
+		return fmt.Errorf("invalid length")
+	}
+	for _, r := range ci {
+		if (r < 'a' || r > 'z') && (r < '0' || r > '9') {
+			return fmt.Errorf("invalid character")
+		}
+	}
+	return nil
+}
 
 // CombineIds compute a merged Id holding information from both the primary Id
 // and the secondary Id.
@@ -32,7 +96,7 @@ import (
 // 7:    4P, 3S
 // 10:   6P, 4S
 // 16:  11P, 5S
-func CombineIds(primary Id, secondary Id) Id {
+func CombineIds(primary Id, secondary Id) CombinedId {
 	var id strings.Builder
 
 	for i := 0; i < idLength; i++ {
@@ -46,7 +110,7 @@ func CombineIds(primary Id, secondary Id) Id {
 		}
 	}
 
-	return Id(id.String())
+	return CombinedId(id.String())
 }
 
 // SeparateIds extract primary and secondary prefix from an arbitrary length prefix

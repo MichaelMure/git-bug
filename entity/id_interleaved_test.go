@@ -9,7 +9,7 @@ import (
 func TestInterleaved(t *testing.T) {
 	primary := Id("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX______________")
 	secondary := Id("YZ0123456789+/________________________________________________")
-	expectedId := Id("aYbZc0def1ghij2klmn3opqr4stuv5wxyz6ABCD7EFGH8IJKL9MNOP+QRST/UVWX")
+	expectedId := CombinedId("aYbZc0def1ghij2klmn3opqr4stuv5wxyz6ABCD7EFGH8IJKL9MNOP+QRST/UVWX")
 
 	interleaved := CombineIds(primary, secondary)
 	require.Equal(t, expectedId, interleaved)

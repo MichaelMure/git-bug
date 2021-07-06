@@ -27,7 +27,7 @@ func (op *SetStatusOperation) Apply(snapshot *Snapshot) {
 	snapshot.addActor(op.Author_)
 
 	item := &SetStatusTimelineItem{
-		id:       op.Id(),
+		id:       entity.CombineIds(snapshot.Id(), op.Id()),
 		Author:   op.Author_,
 		UnixTime: timestamp.Timestamp(op.UnixTime),
 		Status:   op.Status,
@@ -86,13 +86,13 @@ func NewSetStatusOp(author identity.Interface, unixTime int64, status Status) *S
 }
 
 type SetStatusTimelineItem struct {
-	id       entity.Id
+	id       entity.CombinedId
 	Author   identity.Interface
 	UnixTime timestamp.Timestamp
 	Status   Status
 }
 
-func (s SetStatusTimelineItem) Id() entity.Id {
+func (s SetStatusTimelineItem) Id() entity.CombinedId {
 	return s.id
 }
 

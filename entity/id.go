@@ -79,21 +79,3 @@ func (i Id) Validate() error {
 	}
 	return nil
 }
-
-/*
- * Sorting
- */
-
-type Alphabetical []Id
-
-func (a Alphabetical) Len() int {
-	return len(a)
-}
-
-func (a Alphabetical) Less(i, j int) bool {
-	return a[i] < a[j]
-}
-
-func (a Alphabetical) Swap(i, j int) {
-	a[i], a[j] = a[j], a[i]
-}

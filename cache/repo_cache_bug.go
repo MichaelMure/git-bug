@@ -263,7 +263,7 @@ func (c *RepoCache) resolveBugMatcher(f func(*BugExcerpt) bool) (entity.Id, erro
 // ResolveComment search for a Bug/Comment combination matching the merged
 // bug/comment Id prefix. Returns the Bug containing the Comment and the Comment's
 // Id.
-func (c *RepoCache) ResolveComment(prefix string) (*BugCache, entity.Id, error) {
+func (c *RepoCache) ResolveComment(prefix string) (*BugCache, entity.CombinedId, error) {
 	bugPrefix, _ := entity.SeparateIds(prefix)
 	bugCandidate := make([]entity.Id, 0, 5)
 
@@ -277,7 +277,7 @@ func (c *RepoCache) ResolveComment(prefix string) (*BugCache, entity.Id, error) 
 	c.muBug.RUnlock()
 
 	matchingBugIds := make([]entity.Id, 0, 5)
-	matchingCommentId := entity.UnsetId
+	matchingCommentId := entity.UnsetCombinedId
 	var matchingBug *BugCache
 
 	// search for matching comments
@@ -286,7 +286,7 @@ func (c *RepoCache) ResolveComment(prefix string) (*BugCache, entity.Id, error) 
 	for _, bugId := range bugCandidate {
 		b, err := c.ResolveBug(bugId)
 		if err != nil {
-			return nil, entity.UnsetId, err
+			return nil, entity.UnsetCombinedId, err
 		}
 
 		for _, comment := range b.Snapshot().Comments {
@@ -299,9 +299,9 @@ func (c *RepoCache) ResolveComment(prefix string) (*BugCache, entity.Id, error) 
 	}
 
 	if len(matchingBugIds) > 1 {
-		return nil, entity.UnsetId, entity.NewErrMultipleMatch("bug/comment", matchingBugIds)
+		return nil, entity.UnsetCombinedId, entity.NewErrMultipleMatch("bug/comment", matchingBugIds)
 	} else if len(matchingBugIds) == 0 {
-		return nil, entity.UnsetId, errors.New("comment doesn't exist")
+		return nil, entity.UnsetCombinedId, errors.New("comment doesn't exist")
 	}
 
 	return matchingBug, matchingCommentId, nil

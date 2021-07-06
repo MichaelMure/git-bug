@@ -50,7 +50,7 @@ func (snap *Snapshot) GetCreateMetadata(key string) (string, bool) {
 }
 
 // SearchTimelineItem will search in the timeline for an item matching the given hash
-func (snap *Snapshot) SearchTimelineItem(id entity.Id) (TimelineItem, error) {
+func (snap *Snapshot) SearchTimelineItem(id entity.CombinedId) (TimelineItem, error) {
 	for i := range snap.Timeline {
 		if snap.Timeline[i].Id() == id {
 			return snap.Timeline[i], nil
@@ -61,7 +61,7 @@ func (snap *Snapshot) SearchTimelineItem(id entity.Id) (TimelineItem, error) {
 }
 
 // SearchComment will search for a comment matching the given hash
-func (snap *Snapshot) SearchComment(id entity.Id) (*Comment, error) {
+func (snap *Snapshot) SearchComment(id entity.CombinedId) (*Comment, error) {
 	for _, c := range snap.Comments {
 		if c.id == id {
 			return &c, nil
