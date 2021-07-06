@@ -62,6 +62,10 @@ func TestParse(t *testing.T) {
 		}},
 		{"sort:unknown", nil},
 
+		{"label:\"foo:bar\"", &Query{
+			Filters: Filters{Label: []string{"foo:bar"}},
+		}},
+
 		// KVV
 		{`metadata:key:"https://www.example.com/"`, &Query{
 			Filters: Filters{Metadata: []StringPair{{"key", "https://www.example.com/"}}},
