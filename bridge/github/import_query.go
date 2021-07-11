@@ -2,30 +2,19 @@ package github
 
 import "github.com/shurcooL/githubv4"
 
-type rateLimit struct {
-	Cost      githubv4.Int
-	Limit     githubv4.Int
-	NodeCount githubv4.Int
-	Remaining githubv4.Int
-	ResetAt   githubv4.DateTime
-	Used      githubv4.Int
-}
-
-type rateLimiter interface {
-	rateLimit() rateLimit
+type rateLimitQuery struct {
+	RateLimit struct {
+		ResetAt githubv4.DateTime
+		//Limit     githubv4.Int
+		//Remaining githubv4.Int
+	}
 }
 
 type userQuery struct {
-	RateLimit rateLimit `graphql:"rateLimit(dryRun: $dryRun)"`
-	User      user      `graphql:"user(login: $login)"`
-}
-
-func (q *userQuery) rateLimit() rateLimit {
-	return q.RateLimit
+	User user `graphql:"user(login: $login)"`
 }
 
 type labelsQuery struct {
-	//RateLimit rateLimit `graphql:"rateLimit(dryRun: $dryRun)"`
 	Repository struct {
 		Labels struct {
 			Nodes []struct {
@@ -40,26 +29,19 @@ type labelsQuery struct {
 }
 
 type loginQuery struct {
-	//RateLimit rateLimit `graphql:"rateLimit(dryRun: $dryRun)"`
 	Viewer struct {
 		Login string `graphql:"login"`
 	} `graphql:"viewer"`
 }
 
 type issueQuery struct {
-	RateLimit  rateLimit `graphql:"rateLimit(dryRun: $dryRun)"`
 	Repository struct {
 		Issues issueConnection `graphql:"issues(first: $issueFirst, after: $issueAfter, orderBy: {field: CREATED_AT, direction: ASC}, filterBy: {since: $issueSince})"`
 	} `graphql:"repository(owner: $owner, name: $name)"`
 }
 
-func (q *issueQuery) rateLimit() rateLimit {
-	return q.RateLimit
-}
-
 type issueEditQuery struct {
-	RateLimit rateLimit `graphql:"rateLimit(dryRun: $dryRun)"`
-	Node      struct {
+	Node struct {
 		Typename githubv4.String `graphql:"__typename"`
 		Issue    struct {
 			UserContentEdits userContentEditConnection `graphql:"userContentEdits(last: $issueEditLast, before: $issueEditBefore)"`
@@ -67,13 +49,8 @@ type issueEditQuery struct {
 	} `graphql:"node(id: $gqlNodeId)"`
 }
 
-func (q *issueEditQuery) rateLimit() rateLimit {
-	return q.RateLimit
-}
-
 type timelineQuery struct {
-	RateLimit rateLimit `graphql:"rateLimit(dryRun: $dryRun)"`
-	Node      struct {
+	Node struct {
 		Typename githubv4.String `graphql:"__typename"`
 		Issue    struct {
 			TimelineItems timelineItemsConnection `graphql:"timelineItems(first: $timelineFirst, after: $timelineAfter)"`
@@ -81,22 +58,13 @@ type timelineQuery struct {
 	} `graphql:"node(id: $gqlNodeId)"`
 }
 
-func (q *timelineQuery) rateLimit() rateLimit {
-	return q.RateLimit
-}
-
 type commentEditQuery struct {
-	RateLimit rateLimit `graphql:"rateLimit(dryRun: $dryRun)"`
-	Node      struct {
+	Node struct {
 		Typename     githubv4.String `graphql:"__typename"`
 		IssueComment struct {
 			UserContentEdits userContentEditConnection `graphql:"userContentEdits(last: $commentEditLast, before: $commentEditBefore)"`
 		} `graphql:"... on IssueComment"`
 	} `graphql:"node(id: $gqlNodeId)"`
-}
-
-func (q *commentEditQuery) rateLimit() rateLimit {
-	return q.RateLimit
 }
 
 type user struct {

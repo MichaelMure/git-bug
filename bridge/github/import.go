@@ -22,7 +22,7 @@ type githubImporter struct {
 	conf core.Configuration
 
 	// default client
-	client *githubv4.Client
+	client *client
 
 	// mediator to access the Github API
 	mediator *importMediator

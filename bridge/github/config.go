@@ -563,7 +563,7 @@ func getLoginFromToken(token *auth.Token) (string, error) {
 
 	var q loginQuery
 
-	err := client.Query(ctx, &q, nil)
+	err := client.queryPrintMsgs(ctx, &q, nil)
 	if err != nil {
 		return "", err
 	}

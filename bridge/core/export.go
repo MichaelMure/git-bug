@@ -31,6 +31,9 @@ const (
 	// but not severe enough to consider the export a failure.
 	ExportEventWarning
 
+	// The export system (web API) has reached a rate limit
+	ExportEventRateLimiting
+
 	// Error happened during export
 	ExportEventError
 )
@@ -74,6 +77,8 @@ func (er ExportResult) String() string {
 			return fmt.Sprintf("warning at %s: %s", er.ID, er.Err.Error())
 		}
 		return fmt.Sprintf("warning: %s", er.Err.Error())
+	case ExportEventRateLimiting:
+		return fmt.Sprintf("rate limiting: %s", er.Reason)
 
 	default:
 		panic("unknown export result")
@@ -143,5 +148,12 @@ func NewExportTitleEdition(id entity.Id) ExportResult {
 	return ExportResult{
 		ID:    id,
 		Event: ExportEventTitleEdition,
+	}
+}
+
+func NewExportRateLimiting(msg string) ExportResult {
+	return ExportResult{
+		Reason: msg,
+		Event:  ExportEventRateLimiting,
 	}
 }

@@ -2,8 +2,6 @@ package github
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/shurcooL/githubv4"
@@ -22,7 +20,7 @@ const (
 // importMediator provides a convenient interface to retrieve issues from the Github GraphQL API.
 type importMediator struct {
 	// Github graphql client
-	gc *githubv4.Client
+	gh *client
 
 	// name of the repository owner on Github
 	owner string
@@ -45,10 +43,6 @@ type importMediator struct {
 
 type ImportEvent interface {
 	isImportEvent()
-}
-
-type RateLimitingEvent struct {
-	msg string
 }
 
 func (RateLimitingEvent) isImportEvent() {}
@@ -84,9 +78,9 @@ func (mm *importMediator) NextImportEvent() ImportEvent {
 	return <-mm.importEvents
 }
 
-func NewImportMediator(ctx context.Context, client *githubv4.Client, owner, project string, since time.Time) *importMediator {
+func NewImportMediator(ctx context.Context, client *client, owner, project string, since time.Time) *importMediator {
 	mm := importMediator{
-		gc:           client,
+		gh:           client,
 		owner:        owner,
 		project:      project,
 		since:        since,
@@ -144,7 +138,7 @@ func (mm *importMediator) Error() error {
 func (mm *importMediator) User(ctx context.Context, loginName string) (*user, error) {
 	query := userQuery{}
 	vars := varmap{"login": githubv4.String(loginName)}
-	if err := mm.mQuery(ctx, &query, vars); err != nil {
+	if err := mm.gh.queryWithImportEvents(ctx, &query, vars, mm.importEvents); err != nil {
 		return nil, err
 	}
 	return &query.User, nil
@@ -206,7 +200,7 @@ func (mm *importMediator) queryIssueEdits(ctx context.Context, nid githubv4.ID, 
 		vars["issueEditBefore"] = cursor
 	}
 	query := issueEditQuery{}
-	if err := mm.mQuery(ctx, &query, vars); err != nil {
+	if err := mm.gh.queryWithImportEvents(ctx, &query, vars, mm.importEvents); err != nil {
 		mm.err = err
 		return nil, false
 	}
@@ -250,7 +244,7 @@ func (mm *importMediator) queryTimeline(ctx context.Context, nid githubv4.ID, cu
 		vars["timelineAfter"] = cursor
 	}
 	query := timelineQuery{}
-	if err := mm.mQuery(ctx, &query, vars); err != nil {
+	if err := mm.gh.queryWithImportEvents(ctx, &query, vars, mm.importEvents); err != nil {
 		mm.err = err
 		return nil, false
 	}
@@ -300,7 +294,7 @@ func (mm *importMediator) queryCommentEdits(ctx context.Context, nid githubv4.ID
 		vars["commentEditBefore"] = cursor
 	}
 	query := commentEditQuery{}
-	if err := mm.mQuery(ctx, &query, vars); err != nil {
+	if err := mm.gh.queryWithImportEvents(ctx, &query, vars, mm.importEvents); err != nil {
 		mm.err = err
 		return nil, false
 	}
@@ -319,7 +313,7 @@ func (mm *importMediator) queryIssue(ctx context.Context, cursor githubv4.String
 		vars["issueAfter"] = cursor
 	}
 	query := issueQuery{}
-	if err := mm.mQuery(ctx, &query, vars); err != nil {
+	if err := mm.gh.queryWithImportEvents(ctx, &query, vars, mm.importEvents); err != nil {
 		mm.err = err
 		return nil, false
 	}
@@ -339,98 +333,4 @@ func reverse(eds []userContentEdit) chan userContentEdit {
 		close(ret)
 	}()
 	return ret
-}
-
-// mQuery executes a single GraphQL query. The variable query is used to derive the GraphQL query
-// and it is used to populate the response into it. It should be a pointer to a struct that
-// corresponds to the Github graphql schema and it has to implement the rateLimiter interface. If
-// there is a Github rate limiting error, then the function sleeps and retries after the rate limit
-// is expired. If there is another error, then the method will retry before giving up.
-func (mm *importMediator) mQuery(ctx context.Context, query rateLimiter, vars map[string]interface{}) error {
-	if err := mm.queryOnce(ctx, query, vars); err == nil {
-		// success: done
-		return nil
-	}
-	// failure: we will retry
-	// To retry is important for importing projects with a big number of issues, because
-	// there may be temporary network errors or momentary internal errors of the github servers.
-	retries := 3
-	var err error
-	for i := 0; i < retries; i++ {
-		// wait a few seconds before retry
-		sleepTime := time.Duration(8*(i+1)) * time.Second
-		timer := time.NewTimer(sleepTime)
-		select {
-		case <-ctx.Done():
-			stop(timer)
-			return ctx.Err()
-		case <-timer.C:
-		}
-		err = mm.queryOnce(ctx, query, vars)
-		if err == nil {
-			// success: done
-			return nil
-		}
-	}
-	return err
-}
-
-func (mm *importMediator) queryOnce(ctx context.Context, query rateLimiter, vars map[string]interface{}) error {
-	// first: just send the query to the graphql api
-	vars["dryRun"] = githubv4.Boolean(false)
-	qctx, cancel := context.WithTimeout(ctx, defaultTimeout)
-	defer cancel()
-	err := mm.gc.Query(qctx, query, vars)
-	if err == nil {
-		// no error: done
-		return nil
-	}
-	// matching the error string
-	if !strings.Contains(err.Error(), "API rate limit exceeded") {
-		// an error, but not the API rate limit error: done
-		return err
-	}
-	// a rate limit error
-	// ask the graphql api for rate limiting information
-	vars["dryRun"] = githubv4.Boolean(true)
-	qctx, cancel = context.WithTimeout(ctx, defaultTimeout)
-	defer cancel()
-	if err := mm.gc.Query(qctx, query, vars); err != nil {
-		return err
-	}
-	rateLimit := query.rateLimit()
-	if rateLimit.Cost > rateLimit.Remaining {
-		// sleep
-		resetTime := rateLimit.ResetAt.Time
-		// Add a few seconds (8) for good measure
-		resetTime = resetTime.Add(8 * time.Second)
-		msg := fmt.Sprintf("Github GraphQL API: import will sleep until %s", resetTime.String())
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case mm.importEvents <- RateLimitingEvent{msg}:
-		}
-		timer := time.NewTimer(time.Until(resetTime))
-		select {
-		case <-ctx.Done():
-			stop(timer)
-			return ctx.Err()
-		case <-timer.C:
-		}
-	}
-	// run the original query again
-	vars["dryRun"] = githubv4.Boolean(false)
-	qctx, cancel = context.WithTimeout(ctx, defaultTimeout)
-	defer cancel()
-	err = mm.gc.Query(qctx, query, vars)
-	return err // might be nil
-}
-
-func stop(t *time.Timer) {
-	if !t.Stop() {
-		select {
-		case <-t.C:
-		default:
-		}
-	}
 }
