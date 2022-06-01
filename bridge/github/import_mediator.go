@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/shurcooL/githubv4"
@@ -9,10 +10,10 @@ import (
 
 const (
 	// These values influence how fast the github graphql rate limit is exhausted.
-	NumIssues        = 40
-	NumIssueEdits    = 100
-	NumTimelineItems = 100
-	NumCommentEdits  = 100
+	NumIssues        = 100
+	NumIssueEdits    = 50
+	NumTimelineItems = 50
+	NumCommentEdits  = 50
 
 	ChanCapacity = 128
 )
@@ -74,6 +75,13 @@ type CommentEditEvent struct {
 
 func (CommentEditEvent) isImportEvent() {}
 
+type ErrorEvent struct {
+	issueId githubv4.ID
+	err     error
+}
+
+func (ErrorEvent) isImportEvent() {}
+
 func (mm *importMediator) NextImportEvent() ImportEvent {
 	return <-mm.importEvents
 }
@@ -87,21 +95,41 @@ func NewImportMediator(ctx context.Context, client *rateLimitHandlerClient, owne
 		importEvents: make(chan ImportEvent, ChanCapacity),
 		err:          nil,
 	}
+
+	// 1. Prepare import state
+	state := newImportState()
+	state.tryLoadFromFile()
+	if !state.isLoaded() {
+		issues := mm.getIssueIds(ctx)
+		state.addNewIssues(issues)
+		state.writeToFileSystem()
+	}
+
+	// 2. Process import state
 	go func() {
-		mm.fillImportEvents(ctx)
+		mm.generateImportEvents(ctx, state)
 		close(mm.importEvents)
+		state.writeToFileSystem()
 	}()
 	return &mm
 }
 
 type varmap map[string]interface{}
 
-func newIssueVars(owner, project string, since time.Time) varmap {
+func newIssueIdsVars(owner, project string, since time.Time) varmap {
+	return varmap{
+		"owner":      githubv4.String(owner),
+		"name":       githubv4.String(project),
+		"issueSince": githubv4.DateTime{Time: since},
+		"issueFirst": githubv4.Int(NumIssues),
+	}
+}
+
+func newIssueVars(owner, project string, issueId githubv4.Int) varmap {
 	return varmap{
 		"owner":             githubv4.String(owner),
 		"name":              githubv4.String(project),
-		"issueSince":        githubv4.DateTime{Time: since},
-		"issueFirst":        githubv4.Int(NumIssues),
+		"issueNumber":       issueId,
 		"issueEditLast":     githubv4.Int(NumIssueEdits),
 		"issueEditBefore":   (*githubv4.String)(nil),
 		"timelineFirst":     githubv4.Int(NumTimelineItems),
@@ -144,33 +172,60 @@ func (mm *importMediator) User(ctx context.Context, loginName string) (*user, er
 	return &query.User, nil
 }
 
-func (mm *importMediator) fillImportEvents(ctx context.Context) {
+func (mm *importMediator) getIssueIds(ctx context.Context) []githubv4.Int {
+	result := make([]githubv4.Int, 0)
 	initialCursor := githubv4.String("")
-	issues, hasIssues := mm.queryIssue(ctx, initialCursor)
-	for hasIssues {
-		for _, node := range issues.Nodes {
-			select {
-			case <-ctx.Done():
-				return
-			case mm.importEvents <- IssueEvent{node.issue}:
-			}
-
-			// issue edit events follow the issue event
-			mm.fillIssueEditEvents(ctx, &node)
-			// last come the timeline events
-			mm.fillTimelineEvents(ctx, &node)
+	issueConnection, err := mm.queryIssueIds(ctx, initialCursor)
+	if err != nil {
+		mm.err = err
+	}
+	for issueConnection != nil {
+		for _, issueNode := range issueConnection.Nodes {
+			result = append(result, issueNode.Number)
 		}
-		if !issues.PageInfo.HasNextPage {
+		if !issueConnection.PageInfo.HasNextPage {
 			break
 		}
-		issues, hasIssues = mm.queryIssue(ctx, issues.PageInfo.EndCursor)
+		issueConnection, err = mm.queryIssueIds(ctx, issueConnection.PageInfo.EndCursor)
+		if err != nil {
+			mm.err = err
+		}
+	}
+	return result
+}
+
+func (mm *importMediator) generateImportEvents(ctx context.Context, importState importState) {
+	for _, issueId := range importState.issuesToImport() {
+		node, err := mm.queryIssue(ctx, issueId)
+		if err != nil {
+			// TODO(as)
+			importState.setImportError(issueId)
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case mm.importEvents <- IssueEvent{node.issue}:
+		}
+
+		var err1, err2 error
+		// issue edit events follow the issue event
+		err1 = mm.generateIssueEditEvents(ctx, node)
+		// last come the timeline events
+		err2 = mm.generateTimelineEvents(ctx, node)
+
+		if err1 == nil && err2 == nil {
+			importState.setImportSuccess(issueId)
+		} else {
+			importState.setImportError(issueId)
+		}
 	}
 }
 
-func (mm *importMediator) fillIssueEditEvents(ctx context.Context, issueNode *issueNode) {
+func (mm *importMediator) generateIssueEditEvents(ctx context.Context, issueNode *issueNode) error {
 	edits := &issueNode.UserContentEdits
-	hasEdits := true
-	for hasEdits {
+	for edits != nil {
+		var err error
 		for edit := range reverse(edits.Nodes) {
 			if edit.Diff == nil || string(*edit.Diff) == "" {
 				// issueEdit.Diff == nil happen if the event is older than early
@@ -180,18 +235,24 @@ func (mm *importMediator) fillIssueEditEvents(ctx context.Context, issueNode *is
 			}
 			select {
 			case <-ctx.Done():
-				return
+				mm.err = fmt.Errorf("canceled")
+				return mm.err
 			case mm.importEvents <- IssueEditEvent{issueId: issueNode.issue.Id, userContentEdit: edit}:
 			}
 		}
 		if !edits.PageInfo.HasPreviousPage {
 			break
 		}
-		edits, hasEdits = mm.queryIssueEdits(ctx, issueNode.issue.Id, edits.PageInfo.EndCursor)
+		edits, err = mm.queryIssueEdits(ctx, issueNode.issue.Id, edits.PageInfo.EndCursor)
+		if err != nil {
+			mm.err = err
+			return err
+		}
 	}
+	return nil
 }
 
-func (mm *importMediator) queryIssueEdits(ctx context.Context, nid githubv4.ID, cursor githubv4.String) (*userContentEditConnection, bool) {
+func (mm *importMediator) queryIssueEdits(ctx context.Context, nid githubv4.ID, cursor githubv4.String) (*userContentEditConnection, error) {
 	vars := newIssueEditVars()
 	vars["gqlNodeId"] = nid
 	if cursor == "" {
@@ -201,41 +262,51 @@ func (mm *importMediator) queryIssueEdits(ctx context.Context, nid githubv4.ID, 
 	}
 	query := issueEditQuery{}
 	if err := mm.gh.queryWithImportEvents(ctx, &query, vars, mm.importEvents); err != nil {
+		// TODO(as): remove that line?
 		mm.err = err
-		return nil, false
+		return nil, err
 	}
 	connection := &query.Node.Issue.UserContentEdits
 	if len(connection.Nodes) <= 0 {
-		return nil, false
+		return nil, nil
 	}
-	return connection, true
+	return connection, nil
 }
 
-func (mm *importMediator) fillTimelineEvents(ctx context.Context, issueNode *issueNode) {
+func (mm *importMediator) generateTimelineEvents(ctx context.Context, issueNode *issueNode) error {
 	items := &issueNode.TimelineItems
-	hasItems := true
-	for hasItems {
+	for items != nil {
+		var err error
 		for _, item := range items.Nodes {
 			select {
 			case <-ctx.Done():
-				return
+				mm.err = fmt.Errorf("canceled")
+				return mm.err
 			case mm.importEvents <- TimelineEvent{issueId: issueNode.issue.Id, timelineItem: item}:
 			}
 			if item.Typename == "IssueComment" {
 				// Issue comments are different than other timeline items in that
 				// they may have associated user content edits.
 				// Right after the comment we send the comment edits.
-				mm.fillCommentEdits(ctx, &item)
+				if err := mm.fillCommentEdits(ctx, &item); err != nil {
+					mm.err = err
+					return err
+				}
 			}
 		}
 		if !items.PageInfo.HasNextPage {
 			break
 		}
-		items, hasItems = mm.queryTimeline(ctx, issueNode.issue.Id, items.PageInfo.EndCursor)
+		items, err = mm.queryTimeline(ctx, issueNode.issue.Id, items.PageInfo.EndCursor)
+		if err != nil {
+			mm.err = err
+			return err
+		}
 	}
+	return nil
 }
 
-func (mm *importMediator) queryTimeline(ctx context.Context, nid githubv4.ID, cursor githubv4.String) (*timelineItemsConnection, bool) {
+func (mm *importMediator) queryTimeline(ctx context.Context, nid githubv4.ID, cursor githubv4.String) (*timelineItemsConnection, error) {
 	vars := newTimelineVars()
 	vars["gqlNodeId"] = nid
 	if cursor == "" {
@@ -245,26 +316,25 @@ func (mm *importMediator) queryTimeline(ctx context.Context, nid githubv4.ID, cu
 	}
 	query := timelineQuery{}
 	if err := mm.gh.queryWithImportEvents(ctx, &query, vars, mm.importEvents); err != nil {
-		mm.err = err
-		return nil, false
+		return nil, err
 	}
 	connection := &query.Node.Issue.TimelineItems
 	if len(connection.Nodes) <= 0 {
-		return nil, false
+		return nil, nil
 	}
-	return connection, true
+	return connection, nil
 }
 
-func (mm *importMediator) fillCommentEdits(ctx context.Context, item *timelineItem) {
+func (mm *importMediator) fillCommentEdits(ctx context.Context, item *timelineItem) error {
 	// Here we are only concerned with timeline items of type issueComment.
 	if item.Typename != "IssueComment" {
-		return
+		return nil
 	}
+	var err error
 	// First: setup message handling while submitting GraphQL queries.
 	comment := &item.IssueComment
 	edits := &comment.UserContentEdits
-	hasEdits := true
-	for hasEdits {
+	for edits != nil {
 		for edit := range reverse(edits.Nodes) {
 			if edit.Diff == nil || string(*edit.Diff) == "" {
 				// issueEdit.Diff == nil happen if the event is older than early
@@ -274,18 +344,22 @@ func (mm *importMediator) fillCommentEdits(ctx context.Context, item *timelineIt
 			}
 			select {
 			case <-ctx.Done():
-				return
+				return fmt.Errorf("canceled")
 			case mm.importEvents <- CommentEditEvent{commentId: comment.Id, userContentEdit: edit}:
 			}
 		}
 		if !edits.PageInfo.HasPreviousPage {
 			break
 		}
-		edits, hasEdits = mm.queryCommentEdits(ctx, comment.Id, edits.PageInfo.EndCursor)
+		edits, err = mm.queryCommentEdits(ctx, comment.Id, edits.PageInfo.EndCursor)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func (mm *importMediator) queryCommentEdits(ctx context.Context, nid githubv4.ID, cursor githubv4.String) (*userContentEditConnection, bool) {
+func (mm *importMediator) queryCommentEdits(ctx context.Context, nid githubv4.ID, cursor githubv4.String) (*userContentEditConnection, error) {
 	vars := newCommentEditVars()
 	vars["gqlNodeId"] = nid
 	if cursor == "" {
@@ -295,33 +369,42 @@ func (mm *importMediator) queryCommentEdits(ctx context.Context, nid githubv4.ID
 	}
 	query := commentEditQuery{}
 	if err := mm.gh.queryWithImportEvents(ctx, &query, vars, mm.importEvents); err != nil {
-		mm.err = err
-		return nil, false
+		return nil, err
 	}
 	connection := &query.Node.IssueComment.UserContentEdits
 	if len(connection.Nodes) <= 0 {
-		return nil, false
+		return nil, nil
 	}
-	return connection, true
+	return connection, nil
 }
 
-func (mm *importMediator) queryIssue(ctx context.Context, cursor githubv4.String) (*issueConnection, bool) {
-	vars := newIssueVars(mm.owner, mm.project, mm.since)
+func (mm *importMediator) queryIssueIds(ctx context.Context, cursor githubv4.String) (*issueIdsConnection, error) {
+	vars := newIssueIdsVars(mm.owner, mm.project, mm.since)
 	if cursor == "" {
 		vars["issueAfter"] = (*githubv4.String)(nil)
 	} else {
 		vars["issueAfter"] = cursor
 	}
+	query := issueIdsQuery{}
+	if err := mm.gh.queryWithImportEvents(ctx, &query, vars, mm.importEvents); err != nil {
+		return nil, err
+	}
+	issueConnection := &query.Repository.Issues
+	if len(issueConnection.Nodes) <= 0 {
+		return nil, nil
+	}
+	return issueConnection, nil
+}
+
+func (mm *importMediator) queryIssue(ctx context.Context, issueId githubv4.Int) (*issueNode, error) {
+	// TODO(as)
+	vars := newIssueVars(mm.owner, mm.project, issueId)
 	query := issueQuery{}
 	if err := mm.gh.queryWithImportEvents(ctx, &query, vars, mm.importEvents); err != nil {
 		mm.err = err
-		return nil, false
+		return nil, err
 	}
-	connection := &query.Repository.Issues
-	if len(connection.Nodes) <= 0 {
-		return nil, false
-	}
-	return connection, true
+	return &query.Repository.Issue, nil
 }
 
 func reverse(eds []userContentEdit) chan userContentEdit {

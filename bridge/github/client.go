@@ -150,6 +150,7 @@ func (c *rateLimitHandlerClient) callAPIDealWithLimit(apiCall func(context.Conte
 		}
 		// Get the time when Github will reset the rate limit of their API.
 		resetTime := limitQuery.RateLimit.ResetAt.Time
+		resetTime = resetTime.Add(time.Second * 16)
 		msg := fmt.Sprintf(
 			"Github GraphQL API rate limit. This process will sleep until %s.",
 			resetTime.String(),

@@ -34,11 +34,32 @@ type loginQuery struct {
 	} `graphql:"viewer"`
 }
 
-type issueQuery struct {
+type issueIdsConnection struct {
+	Nodes []struct { // issueNode
+		Number githubv4.Int
+		// TODO(as): remove URL when not needed anymore.
+		Url githubv4.URI
+	}
+	PageInfo pageInfo
+}
+
+type issueIdsQuery struct {
 	Repository struct {
-		Issues issueConnection `graphql:"issues(first: $issueFirst, after: $issueAfter, orderBy: {field: CREATED_AT, direction: ASC}, filterBy: {since: $issueSince})"`
+		Issues issueIdsConnection `graphql:"issues(first: $issueFirst, after: $issueAfter, orderBy: {field: CREATED_AT, direction: ASC}, filterBy: {since: $issueSince})"`
 	} `graphql:"repository(owner: $owner, name: $name)"`
 }
+
+type issueQuery struct {
+	Repository struct {
+		Issue issueNode `graphql:"issue(number: $issueNumber)"`
+	} `graphql:"repository(owner: $owner, name: $name)"`
+}
+
+// type issueQuery struct {
+// 	Repository struct {
+// 		Issues issueConnection `graphql:"issues(first: $issueFirst, after: $issueAfter, orderBy: {field: CREATED_AT, direction: ASC}, filterBy: {since: $issueSince})"`
+// 	} `graphql:"repository(owner: $owner, name: $name)"`
+// }
 
 type issueEditQuery struct {
 	Node struct {
