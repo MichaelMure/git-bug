@@ -32,8 +32,8 @@ func TestGithubImporterIntegration(t *testing.T) {
 	importer.client = &rateLimitHandlerClient{sc: clientMock}
 
 	// arrange
-	repo := repository.CreateGoGitTestRepo(false)
-	defer repository.CleanupTestRepos(repo)
+	repo := repository.CreateGoGitTestRepo(t, false)
+
 	backend, err := cache.NewRepoCache(repo)
 	require.NoError(t, err)
 	defer backend.Close()

@@ -245,10 +245,9 @@ func TestJSON(t *testing.T) {
 }
 
 func TestIdentityRemove(t *testing.T) {
-	repo := repository.CreateGoGitTestRepo(false)
-	remoteA := repository.CreateGoGitTestRepo(true)
-	remoteB := repository.CreateGoGitTestRepo(true)
-	defer repository.CleanupTestRepos(repo, remoteA, remoteB)
+	repo := repository.CreateGoGitTestRepo(t, false)
+	remoteA := repository.CreateGoGitTestRepo(t, true)
+	remoteB := repository.CreateGoGitTestRepo(t, true)
 
 	err := repo.AddRemote("remoteA", remoteA.GetLocalRemote())
 	require.NoError(t, err)

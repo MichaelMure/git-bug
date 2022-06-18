@@ -29,8 +29,7 @@ func TestGitlabImport(t *testing.T) {
 		t.Skip("Env var GITLAB_PROJECT_ID missing")
 	}
 
-	repo := repository.CreateGoGitTestRepo(false)
-	defer repository.CleanupTestRepos(repo)
+	repo := repository.CreateGoGitTestRepo(t, false)
 
 	backend, err := cache.NewRepoCache(repo)
 	require.NoError(t, err)

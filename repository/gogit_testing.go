@@ -1,21 +1,29 @@
 package repository
 
 import (
-	"io/ioutil"
 	"log"
+	"testing"
 
 	"github.com/99designs/keyring"
+	"github.com/stretchr/testify/require"
 )
 
 const namespace = "git-bug"
 
+type TestingT interface {
+	Cleanup(func())
+	Errorf(string, ...interface{})
+	FailNow()
+	Helper()
+	TempDir() string
+}
+
 // This is intended for testing only
 
-func CreateGoGitTestRepo(bare bool) TestedRepo {
-	dir, err := ioutil.TempDir("", "")
-	if err != nil {
-		log.Fatal(err)
-	}
+func CreateGoGitTestRepo(t TestingT, bare bool) TestedRepo {
+	t.Helper()
+
+	dir := t.TempDir()
 
 	var creator func(string, string) (*GoGitRepo, error)
 
@@ -29,6 +37,10 @@ func CreateGoGitTestRepo(bare bool) TestedRepo {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	t.Cleanup(func() {
+		require.NoError(t, repo.Close())
+	})
 
 	config := repo.LocalConfig()
 	if err := config.StoreString("user.name", "testuser"); err != nil {
@@ -45,10 +57,10 @@ func CreateGoGitTestRepo(bare bool) TestedRepo {
 	}
 }
 
-func SetupGoGitReposAndRemote() (repoA, repoB, remote TestedRepo) {
-	repoA = CreateGoGitTestRepo(false)
-	repoB = CreateGoGitTestRepo(false)
-	remote = CreateGoGitTestRepo(true)
+func SetupGoGitReposAndRemote(t *testing.T) (repoA, repoB, remote TestedRepo) {
+	repoA = CreateGoGitTestRepo(t, false)
+	repoB = CreateGoGitTestRepo(t, false)
+	remote = CreateGoGitTestRepo(t, true)
 
 	err := repoA.AddRemote("origin", remote.GetLocalRemote())
 	if err != nil {

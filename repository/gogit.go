@@ -360,10 +360,12 @@ func (repo *GoGitRepo) ClearBleveIndex(name string) error {
 	}
 
 	path := filepath.Join(repo.localStorage.Root(), indexPath, name)
-	err := os.RemoveAll(path)
-	if err != nil {
-		return err
-	}
+	// TODO
+	_ = path
+	// err := os.RemoveAll(path)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -899,5 +901,8 @@ func (repo *GoGitRepo) EraseFromDisk() error {
 	path := filepath.Clean(strings.TrimSuffix(repo.path, string(filepath.Separator)+".git"))
 
 	// fmt.Println("Cleaning repo:", path)
-	return os.RemoveAll(path)
+	// TODO
+	_ = path
+	// return os.RemoveAll(path)
+	return nil
 }

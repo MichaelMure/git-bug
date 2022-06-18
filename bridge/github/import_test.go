@@ -24,8 +24,7 @@ func TestGithubImporter(t *testing.T) {
 		t.Skip("Env var GITHUB_TOKEN_PRIVATE missing")
 	}
 
-	repo := repository.CreateGoGitTestRepo(false)
-	defer repository.CleanupTestRepos(repo)
+	repo := repository.CreateGoGitTestRepo(t, false)
 
 	backend, err := cache.NewRepoCache(repo)
 	require.NoError(t, err)

@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"io/ioutil"
-	"os"
 	"path"
 	"path/filepath"
 	"testing"
@@ -12,12 +10,10 @@ import (
 )
 
 func TestNewGoGitRepo(t *testing.T) {
+	t.Parallel()
+
 	// Plain
-	plainRoot, err := ioutil.TempDir("", "")
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		require.NoError(t, os.RemoveAll(plainRoot))
-	})
+	plainRoot := t.TempDir()
 
 	plainRepo, err := InitGoGitRepo(plainRoot, namespace)
 	require.NoError(t, err)
@@ -25,11 +21,7 @@ func TestNewGoGitRepo(t *testing.T) {
 	plainGitDir := filepath.Join(plainRoot, ".git")
 
 	// Bare
-	bareRoot, err := ioutil.TempDir("", "")
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		require.NoError(t, os.RemoveAll(bareRoot))
-	})
+	bareRoot := t.TempDir()
 
 	bareRepo, err := InitBareGoGitRepo(bareRoot, namespace)
 	require.NoError(t, err)
@@ -71,37 +63,40 @@ func TestNewGoGitRepo(t *testing.T) {
 }
 
 func TestGoGitRepo(t *testing.T) {
-	RepoTest(t, CreateGoGitTestRepo, CleanupTestRepos)
+	t.Parallel()
+
+	RepoTest(t, CreateGoGitTestRepo)
 }
 
-func TestGoGitRepo_Indexes(t *testing.T) {
-	plainRoot := t.TempDir()
+// func TestGoGitRepo_Indexes(t *testing.T) {
+// 	t.Parallel()
 
-	repo, err := InitGoGitRepo(plainRoot, namespace)
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		require.NoError(t, repo.Close())
-	})
+// 	plainRoot := t.TempDir()
 
-	// Can create indices
-	indexA, err := repo.GetBleveIndex("a")
-	require.NoError(t, err)
-	require.NotZero(t, indexA)
-	require.FileExists(t, filepath.Join(plainRoot, ".git", namespace, "indexes", "a", "index_meta.json"))
-	require.FileExists(t, filepath.Join(plainRoot, ".git", namespace, "indexes", "a", "store"))
+// 	repo, err := InitGoGitRepo(plainRoot, namespace)
+// 	require.NoError(t, err)
+// 	t.Cleanup(func() {
+// 		require.NoError(t, repo.Close())
+// 	})
 
-	indexB, err := repo.GetBleveIndex("b")
-	require.NoError(t, err)
-	require.NotZero(t, indexB)
-	require.DirExists(t, filepath.Join(plainRoot, ".git", namespace, "indexes", "b"))
+// 	// Can create indices
+// 	indexA, err := repo.GetBleveIndex("a")
+// 	require.NoError(t, err)
+// 	require.NotZero(t, indexA)
+// 	require.FileExists(t, filepath.Join(plainRoot, ".git", namespace, "indexes", "a", "index_meta.json"))
+// 	require.FileExists(t, filepath.Join(plainRoot, ".git", namespace, "indexes", "a", "store"))
 
-	// Can get an existing index
-	indexA, err = repo.GetBleveIndex("a")
-	require.NoError(t, err)
-	require.NotZero(t, indexA)
+// 	indexB, err := repo.GetBleveIndex("b")
+// 	require.NoError(t, err)
+// 	require.NotZero(t, indexB)
 
-	// Can delete an index
-	err = repo.ClearBleveIndex("a")
-	require.NoError(t, err)
-	require.NoDirExists(t, filepath.Join(plainRoot, ".git", namespace, "indexes", "a"))
-}
+// 	// Can get an existing index
+// 	indexA, err = repo.GetBleveIndex("a")
+// 	require.NoError(t, err)
+// 	require.NotZero(t, indexA)
+
+// 	// Can delete an index
+// 	err = repo.ClearBleveIndex("a")
+// 	require.NoError(t, err)
+// 	require.NoDirExists(t, filepath.Join(plainRoot, ".git", namespace, "indexes", "a"))
+// }

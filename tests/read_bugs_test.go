@@ -9,8 +9,7 @@ import (
 )
 
 func TestReadBugs(t *testing.T) {
-	repo := repository.CreateGoGitTestRepo(false)
-	defer repository.CleanupTestRepos(repo)
+	repo := repository.CreateGoGitTestRepo(t, false)
 
 	random_bugs.FillRepoWithSeed(repo, 15, 42)
 
@@ -23,8 +22,7 @@ func TestReadBugs(t *testing.T) {
 }
 
 func benchmarkReadBugs(bugNumber int, t *testing.B) {
-	repo := repository.CreateGoGitTestRepo(false)
-	defer repository.CleanupTestRepos(repo)
+	repo := repository.CreateGoGitTestRepo(t, false)
 
 	random_bugs.FillRepoWithSeed(repo, bugNumber, 42)
 	t.ResetTimer()

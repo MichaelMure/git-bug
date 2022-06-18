@@ -14,8 +14,9 @@ import (
 )
 
 func TestCache(t *testing.T) {
-	repo := repository.CreateGoGitTestRepo(false)
-	defer repository.CleanupTestRepos(repo)
+	t.Parallel()
+
+	repo := repository.CreateGoGitTestRepo(t, false)
 
 	cache, err := NewRepoCache(repo)
 	require.NoError(t, err)
@@ -112,8 +113,9 @@ func TestCache(t *testing.T) {
 }
 
 func TestCachePushPull(t *testing.T) {
-	repoA, repoB, remote := repository.SetupGoGitReposAndRemote()
-	defer repository.CleanupTestRepos(repoA, repoB, remote)
+	t.Parallel()
+
+	repoA, repoB, _ := repository.SetupGoGitReposAndRemote(t)
 
 	cacheA, err := NewRepoCache(repoA)
 	require.NoError(t, err)
@@ -171,10 +173,11 @@ func TestCachePushPull(t *testing.T) {
 }
 
 func TestRemove(t *testing.T) {
-	repo := repository.CreateGoGitTestRepo(false)
-	remoteA := repository.CreateGoGitTestRepo(true)
-	remoteB := repository.CreateGoGitTestRepo(true)
-	defer repository.CleanupTestRepos(repo, remoteA, remoteB)
+	t.Parallel()
+
+	repo := repository.CreateGoGitTestRepo(t, false)
+	remoteA := repository.CreateGoGitTestRepo(t, true)
+	remoteB := repository.CreateGoGitTestRepo(t, true)
 
 	err := repo.AddRemote("remoteA", remoteA.GetLocalRemote())
 	require.NoError(t, err)
@@ -220,7 +223,9 @@ func TestRemove(t *testing.T) {
 }
 
 func TestCacheEviction(t *testing.T) {
-	repo := repository.CreateGoGitTestRepo(false)
+	t.Parallel()
+
+	repo := repository.CreateGoGitTestRepo(t, false)
 	repoCache, err := NewRepoCache(repo)
 	require.NoError(t, err)
 	repoCache.setCacheSize(2)
@@ -283,12 +288,13 @@ func checkBugPresence(t *testing.T, cache *RepoCache, bug *BugCache, presence bo
 }
 
 func TestLongDescription(t *testing.T) {
+	t.Parallel()
+
 	// See https://github.com/MichaelMure/git-bug/issues/606
 
 	text := strings.Repeat("x", 65536)
 
-	repo := repository.CreateGoGitTestRepo(false)
-	defer repository.CleanupTestRepos(repo)
+	repo := repository.CreateGoGitTestRepo(t, false)
 
 	backend, err := NewRepoCache(repo)
 	require.NoError(t, err)

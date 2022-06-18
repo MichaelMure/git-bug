@@ -9,8 +9,7 @@ import (
 )
 
 func TestIdentityPushPull(t *testing.T) {
-	repoA, repoB, remote := repository.SetupGoGitReposAndRemote()
-	defer repository.CleanupTestRepos(repoA, repoB, remote)
+	repoA, repoB, _ := repository.SetupGoGitReposAndRemote(t)
 
 	identity1, err := NewIdentity(repoA, "name1", "email1")
 	require.NoError(t, err)

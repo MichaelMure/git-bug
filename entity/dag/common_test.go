@@ -103,9 +103,9 @@ func makeTestContext() (repository.ClockedRepo, identity.Interface, identity.Int
 }
 
 func makeTestContextRemote(t *testing.T) (repository.ClockedRepo, repository.ClockedRepo, repository.ClockedRepo, identity.Interface, identity.Interface, identity.Resolver, Definition) {
-	repoA := repository.CreateGoGitTestRepo(false)
-	repoB := repository.CreateGoGitTestRepo(false)
-	remote := repository.CreateGoGitTestRepo(true)
+	repoA := repository.CreateGoGitTestRepo(t, false)
+	repoB := repository.CreateGoGitTestRepo(t, false)
+	remote := repository.CreateGoGitTestRepo(t, true)
 
 	err := repoA.AddRemote("remote", remote.GetLocalRemote())
 	require.NoError(t, err)

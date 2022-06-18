@@ -24,8 +24,9 @@ func allEntities(t testing.TB, bugs <-chan StreamedEntity) []*Entity {
 }
 
 func TestEntityPushPull(t *testing.T) {
-	repoA, repoB, remote, id1, id2, resolver, def := makeTestContextRemote(t)
-	defer repository.CleanupTestRepos(repoA, repoB, remote)
+	t.Parallel()
+
+	repoA, repoB, _, id1, id2, resolver, def := makeTestContextRemote(t)
 
 	// A --> remote --> B
 	e := New(def)
@@ -61,8 +62,9 @@ func TestEntityPushPull(t *testing.T) {
 }
 
 func TestListLocalIds(t *testing.T) {
-	repoA, repoB, remote, id1, id2, resolver, def := makeTestContextRemote(t)
-	defer repository.CleanupTestRepos(repoA, repoB, remote)
+	t.Parallel()
+
+	repoA, repoB, _, id1, id2, resolver, def := makeTestContextRemote(t)
 
 	// A --> remote --> B
 	e := New(def)
@@ -206,8 +208,9 @@ func assertNotEqualRefs(t *testing.T, repoA, repoB repository.RepoData, prefix s
 }
 
 func TestMerge(t *testing.T) {
-	repoA, repoB, remote, id1, id2, resolver, def := makeTestContextRemote(t)
-	defer repository.CleanupTestRepos(repoA, repoB, remote)
+	t.Parallel()
+
+	repoA, repoB, _, id1, id2, resolver, def := makeTestContextRemote(t)
 
 	// SCENARIO 1
 	// if the remote Entity doesn't exist locally, it's created
@@ -387,8 +390,9 @@ func TestMerge(t *testing.T) {
 }
 
 func TestRemove(t *testing.T) {
-	repoA, repoB, remote, id1, _, resolver, def := makeTestContextRemote(t)
-	defer repository.CleanupTestRepos(repoA, repoB, remote)
+	t.Parallel()
+
+	repoA, _, _, id1, _, resolver, def := makeTestContextRemote(t)
 
 	e := New(def)
 	e.Append(newOp1(id1, "foo"))

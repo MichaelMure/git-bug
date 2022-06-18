@@ -19,8 +19,7 @@ import (
 )
 
 func TestGitFileHandlers(t *testing.T) {
-	repo := repository.CreateGoGitTestRepo(false)
-	defer repository.CleanupTestRepos(repo)
+	repo := repository.CreateGoGitTestRepo(t, false)
 
 	mrc := cache.NewMultiRepoCache()
 	repoCache, err := mrc.RegisterDefaultRepository(repo)

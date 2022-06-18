@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"log"
 	"math/rand"
 	"testing"
 
@@ -14,37 +13,37 @@ import (
 // TODO: add tests for RepoBleve
 // TODO: add tests for RepoStorage
 
-func CleanupTestRepos(repos ...Repo) {
-	var firstErr error
-	for _, repo := range repos {
-		if repo, ok := repo.(TestedRepo); ok {
-			err := repo.EraseFromDisk()
-			if err != nil {
-				log.Println(err)
-				if firstErr == nil {
-					firstErr = err
-				}
-			}
-		}
-	}
+// func CleanupTestRepos(repos ...Repo) { // TODO
+// 	var firstErr error
+// 	for _, repo := range repos {
+// 		if repo, ok := repo.(TestedRepo); ok {
+// 			err := repo.EraseFromDisk()
+// 			if err != nil {
+// 				log.Println(err)
+// 				if firstErr == nil {
+// 					firstErr = err
+// 				}
+// 			}
+// 		}
+// 	}
 
-	if firstErr != nil {
-		log.Fatal(firstErr)
-	}
-}
+// 	if firstErr != nil {
+// 		log.Fatal(firstErr)
+// 	}
+// }
 
-type RepoCreator func(bare bool) TestedRepo
-type RepoCleaner func(repos ...Repo)
+type RepoCreator func(t TestingT, bare bool) TestedRepo
+
+// type RepoCleaner func(repos ...Repo) // TODO
 
 // Test suite for a Repo implementation
-func RepoTest(t *testing.T, creator RepoCreator, cleaner RepoCleaner) {
+func RepoTest(t *testing.T, creator RepoCreator) {
 	for bare, name := range map[bool]string{
 		false: "Plain",
 		true:  "Bare",
 	} {
 		t.Run(name, func(t *testing.T) {
-			repo := creator(bare)
-			defer cleaner(repo)
+			repo := creator(t, bare)
 
 			t.Run("Data", func(t *testing.T) {
 				RepoDataTest(t, repo)
