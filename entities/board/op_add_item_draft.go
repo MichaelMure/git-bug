@@ -1,28 +1,101 @@
 package board
 
 import (
+	"fmt"
+
+	"github.com/MichaelMure/git-bug/entities/common"
+	"github.com/MichaelMure/git-bug/entities/identity"
 	"github.com/MichaelMure/git-bug/entity"
 	"github.com/MichaelMure/git-bug/entity/dag"
+	"github.com/MichaelMure/git-bug/repository"
+	"github.com/MichaelMure/git-bug/util/text"
+	"github.com/MichaelMure/git-bug/util/timestamp"
 )
 
 var _ Operation = &AddItemDraftOperation{}
 
 type AddItemDraftOperation struct {
 	dag.OpBase
-	Title   string `json:"title"`
-	Message string `json:"message"`
+	ColumnId entity.Id         `json:"column"`
+	Title    string            `json:"title"`
+	Message  string            `json:"message"`
+	Files    []repository.Hash `json:"files"`
 }
 
 func (op *AddItemDraftOperation) Id() entity.Id {
 	return dag.IdOperation(op, &op.OpBase)
 }
 
+func (op *AddItemDraftOperation) GetFiles() []repository.Hash {
+	return op.Files
+}
+
 func (op *AddItemDraftOperation) Validate() error {
-	// TODO implement me
-	panic("implement me")
+	if err := op.OpBase.Validate(op, AddItemDraftOp); err != nil {
+		return err
+	}
+
+	if err := op.ColumnId.Validate(); err != nil {
+		return err
+	}
+
+	if text.Empty(op.Title) {
+		return fmt.Errorf("title is empty")
+	}
+	if !text.SafeOneLine(op.Title) {
+		return fmt.Errorf("title has unsafe characters")
+	}
+
+	if !text.Safe(op.Message) {
+		return fmt.Errorf("message is not fully printable")
+	}
+
+	for _, file := range op.Files {
+		if !file.IsValid() {
+			return fmt.Errorf("invalid file hash")
+		}
+	}
+
+	return nil
 }
 
 func (op *AddItemDraftOperation) Apply(snapshot *Snapshot) {
-	// TODO implement me
-	panic("implement me")
+	snapshot.addActor(op.Author())
+
+	for _, column := range snapshot.Columns {
+		if column.Id == op.ColumnId {
+			column.Items = append(column.Items, &Draft{
+				combinedId: entity.CombineIds(snapshot.id, op.Id()),
+				author:     op.Author(),
+				status:     common.OpenStatus,
+				title:      op.Title,
+				message:    op.Message,
+				unixTime:   timestamp.Timestamp(op.UnixTime),
+			})
+			return
+		}
+	}
+}
+
+func NewAddItemDraftOp(author identity.Interface, unixTime int64, columnId entity.Id, title, message string, files []repository.Hash) *AddItemDraftOperation {
+	return &AddItemDraftOperation{
+		OpBase:   dag.NewOpBase(AddItemDraftOp, author, unixTime),
+		ColumnId: columnId,
+		Title:    title,
+		Message:  message,
+		Files:    files,
+	}
+}
+
+// AddItemDraft is a convenience function to add a draft item to a Board
+func AddItemDraft(b *Board, author identity.Interface, unixTime int64, columnId entity.Id, title, message string, files []repository.Hash, metadata map[string]string) (*AddItemDraftOperation, error) {
+	op := NewAddItemDraftOp(author, unixTime, columnId, title, message, files)
+	for key, val := range metadata {
+		op.SetMetadata(key, val)
+	}
+	if err := op.Validate(); err != nil {
+		return nil, err
+	}
+	b.Append(op)
+	return op, nil
 }

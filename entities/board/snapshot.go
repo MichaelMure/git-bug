@@ -5,27 +5,36 @@ import (
 
 	"github.com/MichaelMure/git-bug/entities/identity"
 	"github.com/MichaelMure/git-bug/entity"
+	"github.com/MichaelMure/git-bug/entity/dag"
 )
 
 type Column struct {
+	Id    entity.Id
 	Name  string
-	Cards []CardItem
+	Items []Item
 }
 
-type CardItem interface {
+type Item interface {
+	CombinedId() entity.CombinedId
 	// Status() common.Status
 }
+
+var _ dag.Snapshot = &Snapshot{}
 
 type Snapshot struct {
 	id entity.Id
 
 	Title       string
 	Description string
-	Columns     []Column
+	Columns     []*Column
 	Actors      []identity.Interface
 
 	CreateTime time.Time
-	Operations []Operation
+	Operations []dag.Operation
+}
+
+func (snap *Snapshot) AllOperations() []dag.Operation {
+	return snap.Operations
 }
 
 // Id returns the Board identifier

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/MichaelMure/git-bug/entities/bug"
 	"github.com/MichaelMure/git-bug/entity"
 	"github.com/MichaelMure/git-bug/entity/dag"
 )
@@ -30,7 +31,7 @@ type Operation interface {
 	Apply(snapshot *Snapshot)
 }
 
-func operationUnmarshaller(raw json.RawMessage, resolvers entity.Resolvers) (dag.Operation, error) {
+func operationUnmarshaler(raw json.RawMessage, resolvers entity.Resolvers) (dag.Operation, error) {
 	var t struct {
 		OperationType dag.OperationType `json:"type"`
 	}
@@ -63,8 +64,15 @@ func operationUnmarshaller(raw json.RawMessage, resolvers entity.Resolvers) (dag
 
 	switch op := op.(type) {
 	case *AddItemEntityOperation:
-		// TODO: resolve entity
-		op.item = struct{}{}
+		switch op.EntityType {
+		case entityTypeBug:
+			op.entity, err = entity.Resolve[bug.Interface](resolvers, op.EntityId)
+		default:
+			return nil, fmt.Errorf("unknown entity type")
+		}
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return op, nil

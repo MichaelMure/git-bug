@@ -1,24 +1,37 @@
 package board
 
 import (
+	"github.com/MichaelMure/git-bug/entities/identity"
+	"github.com/MichaelMure/git-bug/entity"
 	"github.com/dustin/go-humanize"
 
 	"github.com/MichaelMure/git-bug/entities/common"
-	"github.com/MichaelMure/git-bug/repository"
 	"github.com/MichaelMure/git-bug/util/timestamp"
 )
 
-var _ CardItem = &Draft{}
+var _ Item = &Draft{}
 
 type Draft struct {
+	// combinedId should be the result of entity.CombineIds with the Board id and the id
+	// of the Operation that created the Draft
+	combinedId entity.CombinedId
+
+	author  identity.Interface
 	status  common.Status
 	title   string
 	message string
-	files   []repository.Hash
 
 	// Creation time of the comment.
 	// Should be used only for human display, never for ordering as we can't rely on it in a distributed system.
 	unixTime timestamp.Timestamp
+}
+
+func (d *Draft) CombinedId() entity.CombinedId {
+	if d.combinedId == "" || d.combinedId == entity.UnsetCombinedId {
+		// simply panic as it would be a coding error (no id provided at construction)
+		panic("no combined id")
+	}
+	return d.combinedId
 }
 
 func (d *Draft) Status() common.Status {

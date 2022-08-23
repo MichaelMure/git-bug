@@ -1,6 +1,8 @@
 package board
 
 import (
+	"fmt"
+
 	"github.com/MichaelMure/git-bug/entities/bug"
 	"github.com/MichaelMure/git-bug/entities/identity"
 
@@ -9,7 +11,7 @@ import (
 	"github.com/MichaelMure/git-bug/repository"
 )
 
-var _ entity.Interface = &Board{}
+var _ Interface = &Board{}
 
 // 1: original format
 const formatVersion = 1
@@ -17,11 +19,15 @@ const formatVersion = 1
 var def = dag.Definition{
 	Typename:             "board",
 	Namespace:            "boards",
-	OperationUnmarshaler: operationUnmarshaller,
+	OperationUnmarshaler: operationUnmarshaler,
 	FormatVersion:        formatVersion,
 }
 
 var ClockLoader = dag.ClockLoader(def)
+
+type Interface interface {
+	dag.Interface[*Snapshot, Operation]
+}
 
 // Board holds the data of a project board.
 type Board struct {
@@ -54,4 +60,76 @@ func ReadWithResolver(repo repository.ClockedRepo, resolvers entity.Resolvers, i
 		return nil, err
 	}
 	return &Board{Entity: e}, nil
+}
+
+// Validate check if the Board data is valid
+func (board *Board) Validate() error {
+	if err := board.Entity.Validate(); err != nil {
+		return err
+	}
+
+	// The very first Op should be a CreateOp
+	firstOp := board.FirstOp()
+	if firstOp == nil || firstOp.Type() != CreateOp {
+		return fmt.Errorf("first operation should be a Create op")
+	}
+
+	// Check that there is no more CreateOp op
+	for i, op := range board.Entity.Operations() {
+		if i == 0 {
+			continue
+		}
+		if op.Type() == CreateOp {
+			return fmt.Errorf("only one Create op allowed")
+		}
+	}
+
+	return nil
+}
+
+// Append add a new Operation to the Board
+func (board *Board) Append(op Operation) {
+	board.Entity.Append(op)
+}
+
+// Operations return the ordered operations
+func (board *Board) Operations() []Operation {
+	source := board.Entity.Operations()
+	result := make([]Operation, len(source))
+	for i, op := range source {
+		result[i] = op.(Operation)
+	}
+	return result
+}
+
+// Compile a board in an easily usable snapshot
+func (board *Board) Compile() *Snapshot {
+	snap := &Snapshot{
+		id: board.Id(),
+	}
+
+	for _, op := range board.Operations() {
+		op.Apply(snap)
+		snap.Operations = append(snap.Operations, op)
+	}
+
+	return snap
+}
+
+// FirstOp lookup for the very first operation of the board.
+// For a valid Board, this operation should be a CreateOp
+func (board *Board) FirstOp() Operation {
+	if fo := board.Entity.FirstOp(); fo != nil {
+		return fo.(Operation)
+	}
+	return nil
+}
+
+// LastOp lookup for the very last operation of the board.
+// For a valid Board, should never be nil
+func (board *Board) LastOp() Operation {
+	if lo := board.Entity.LastOp(); lo != nil {
+		return lo.(Operation)
+	}
+	return nil
 }

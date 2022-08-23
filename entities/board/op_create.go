@@ -62,6 +62,14 @@ func (op *CreateOperation) Validate() error {
 		}
 	}
 
+	set := make(map[string]struct{})
+	for _, column := range op.Columns {
+		set[column] = struct{}{}
+	}
+	if len(set) != len(op.Columns) {
+		return fmt.Errorf("non unique column name")
+	}
+
 	return nil
 }
 
@@ -75,21 +83,28 @@ func (op *CreateOperation) Apply(snap *Snapshot) {
 
 	snap.Title = op.Title
 	snap.Description = op.Description
+	snap.CreateTime = op.Time()
 
 	for _, name := range op.Columns {
-		snap.Columns = append(snap.Columns, Column{
+		// we derive a unique Id from the original column name
+		id := entity.DeriveId([]byte(name))
+
+		snap.Columns = append(snap.Columns, &Column{
+			Id:    id,
 			Name:  name,
-			Cards: nil,
+			Items: nil,
 		})
 	}
 
 	snap.addActor(op.Author())
 }
 
+// CreateDefaultColumns is a convenience function to create a board with the default columns
 func CreateDefaultColumns(author identity.Interface, unixTime int64, title, description string) (*Board, *CreateOperation, error) {
 	return Create(author, unixTime, title, description, DefaultColumns)
 }
 
+// Create is a convenience function to create a board
 func Create(author identity.Interface, unixTime int64, title, description string, columns []string) (*Board, *CreateOperation, error) {
 	b := NewBoard()
 	op := NewCreateOp(author, unixTime, title, description, columns)

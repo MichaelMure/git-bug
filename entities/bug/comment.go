@@ -28,7 +28,7 @@ type Comment struct {
 }
 
 func (c Comment) CombinedId() entity.CombinedId {
-	if c.combinedId == "" {
+	if c.combinedId == "" || c.combinedId == entity.UnsetCombinedId {
 		// simply panic as it would be a coding error (no id provided at construction)
 		panic("no combined id")
 	}
