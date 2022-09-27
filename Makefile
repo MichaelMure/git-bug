@@ -41,6 +41,10 @@ secure-vulnerabilities:
 	go install golang.org/x/vuln/cmd/govulncheck@latest
 	govulncheck ./... 
 
+legal: build
+	go install github.com/uw-labs/lichen@latest
+	lichen --config=.lichen.yaml ./git-bug
+
 test:
 	go test -v -bench=. ./...
 

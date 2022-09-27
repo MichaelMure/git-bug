@@ -56,3 +56,6 @@ jobs:
 
       - name: Check Security (vulnerable dependencies and insecure practices)
         run: make secure
+
+      - name: Check that all included packages have acceptable OSS licenses
+        run: make lint

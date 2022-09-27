@@ -1,0 +1,21 @@
+---
+# Configuration for the Lichen software license scanner.  The list below
+# represents the licenses that are currently compiled into the git-bug
+# binary (with the exception of the GPL license which is git-bug's own
+# license and is therefore compatible.)  Licenses can be added to the
+# "allow" list using the official identifiers from the SPDX License
+# List which can be found at https://spdx.org/licenses/.
+#
+# The Lichen configuration file format allows overrides (for packages
+# where the license can't be automatically discovered) and exceptions
+# (to allow disallowed licenses for certain packages).  The format for
+# this file can be found at https://github.com/uw-labs/lichen#config.
+
+allow:
+- "Apache-2.0"
+- "BSD-2-Clause"
+- "BSD-3-Clause"
+- "GPL-3.0-or-later"
+- "ISC"
+- "MIT"
+- "MPL-2.0"
