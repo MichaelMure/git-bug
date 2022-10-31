@@ -50,3 +50,7 @@ func (c Comment) FormatTime() string {
 
 // IsAuthored is a sign post method for gqlgen
 func (c Comment) IsAuthored() {}
+
+func (c Comment) Shortened(len int) {
+
+}

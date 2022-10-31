@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	text "github.com/MichaelMure/go-term-text"
 	"github.com/spf13/cobra"
 
 	"github.com/MichaelMure/git-bug/bridge"
@@ -12,6 +13,7 @@ import (
 	"github.com/MichaelMure/git-bug/cache"
 	_select "github.com/MichaelMure/git-bug/commands/select"
 	"github.com/MichaelMure/git-bug/entities/bug"
+	"github.com/MichaelMure/git-bug/entity"
 )
 
 type validArgsFunction func(cmd *cobra.Command, args []string, toComplete string) (completions []string, directives cobra.ShellCompDirective)
@@ -159,6 +161,47 @@ func completeBugAndLabels(env *Env, addOrRemove bool) validArgsFunction {
 		}
 
 		return completions, cobra.ShellCompDirectiveNoFileComp
+	}
+}
+
+func completeComment(env *Env) validArgsFunction {
+	return func(cmd *cobra.Command, args []string, toComplete string) (completions []string, directives cobra.ShellCompDirective) {
+		if err := loadBackend(env)(cmd, args); err != nil {
+			return completionHandlerError(err)
+		}
+		defer func() {
+			_ = env.backend.Close()
+		}()
+
+		bugPrefix, _ := entity.SeparateIds(toComplete)
+		bugCandidate := make([]entity.Id, 0, 5)
+
+		// build a list of possible matching bugs
+		_, _ = env.backend.ResolveBugExcerptMatcher(func(excerpt *cache.BugExcerpt) bool {
+			if excerpt.Id.HasPrefix(bugPrefix) {
+				bugCandidate = append(bugCandidate, excerpt.Id)
+			}
+			return false
+		})
+
+		completions = make([]string, 0, 5)
+
+		for _, bugId := range bugCandidate {
+			b, err := env.backend.ResolveBug(bugId)
+			if err != nil {
+				return completionHandlerError(err)
+			}
+
+			for _, comment := range b.Snapshot().Comments {
+				if comment.CombinedId().HasPrefix(toComplete) {
+					text.TrimSpace()
+					message := strings.ReplaceAll(comment.Message, "\n", "")
+
+					completions = append(completions, comment.CombinedId().Human()+"\t"+text.TruncateMax())
+				}
+			}
+		}
+
 	}
 }
 
