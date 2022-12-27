@@ -1,11 +1,11 @@
 package board
 
 import (
-	"github.com/MichaelMure/git-bug/entities/identity"
-	"github.com/MichaelMure/git-bug/entity"
 	"github.com/dustin/go-humanize"
 
-	"github.com/MichaelMure/git-bug/entities/common"
+	"github.com/MichaelMure/git-bug/entities/identity"
+	"github.com/MichaelMure/git-bug/entity"
+
 	"github.com/MichaelMure/git-bug/util/timestamp"
 )
 
@@ -16,10 +16,9 @@ type Draft struct {
 	// of the Operation that created the Draft
 	combinedId entity.CombinedId
 
-	author  identity.Interface
-	status  common.Status
-	title   string
-	message string
+	Author  identity.Interface
+	Title   string
+	Message string
 
 	// Creation time of the comment.
 	// Should be used only for human display, never for ordering as we can't rely on it in a distributed system.
@@ -32,11 +31,6 @@ func (d *Draft) CombinedId() entity.CombinedId {
 		panic("no combined id")
 	}
 	return d.combinedId
-}
-
-func (d *Draft) Status() common.Status {
-	// TODO implement me
-	panic("implement me")
 }
 
 // FormatTimeRel format the UnixTime of the comment for human consumption

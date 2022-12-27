@@ -16,6 +16,7 @@ type Column struct {
 
 type Item interface {
 	CombinedId() entity.CombinedId
+	// TODO: all items have status?
 	// Status() common.Status
 }
 
@@ -24,10 +25,10 @@ var _ dag.Snapshot = &Snapshot{}
 type Snapshot struct {
 	id entity.Id
 
-	Title       string
-	Description string
-	Columns     []*Column
-	Actors      []identity.Interface
+	Title        string
+	Description  string
+	Columns      []*Column
+	Participants []identity.Interface
 
 	CreateTime time.Time
 	Operations []dag.Operation
@@ -59,20 +60,20 @@ func (snap *Snapshot) EditTime() time.Time {
 	return snap.Operations[len(snap.Operations)-1].Time()
 }
 
-// append the operation author to the actors list
-func (snap *Snapshot) addActor(actor identity.Interface) {
-	for _, a := range snap.Actors {
-		if actor.Id() == a.Id() {
+// append the operation author to the participants list
+func (snap *Snapshot) addParticipant(participant identity.Interface) {
+	for _, p := range snap.Participants {
+		if participant.Id() == p.Id() {
 			return
 		}
 	}
 
-	snap.Actors = append(snap.Actors, actor)
+	snap.Participants = append(snap.Participants, participant)
 }
 
-// HasActor return true if the id is a actor
-func (snap *Snapshot) HasActor(id entity.Id) bool {
-	for _, p := range snap.Actors {
+// HasParticipant return true if the id is a participant
+func (snap *Snapshot) HasParticipant(id entity.Id) bool {
+	for _, p := range snap.Participants {
 		if p.Id() == id {
 			return true
 		}
@@ -80,10 +81,10 @@ func (snap *Snapshot) HasActor(id entity.Id) bool {
 	return false
 }
 
-// HasAnyActor return true if one of the ids is a actor
-func (snap *Snapshot) HasAnyActor(ids ...entity.Id) bool {
+// HasAnyParticipant return true if one of the ids is a participant
+func (snap *Snapshot) HasAnyParticipant(ids ...entity.Id) bool {
 	for _, id := range ids {
-		if snap.HasActor(id) {
+		if snap.HasParticipant(id) {
 			return true
 		}
 	}

@@ -9,7 +9,7 @@ var _ Item = &BugItem{}
 
 type BugItem struct {
 	combinedId entity.CombinedId
-	bug        bug.Interface
+	Bug        bug.Interface
 }
 
 func (e *BugItem) CombinedId() entity.CombinedId {

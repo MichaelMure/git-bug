@@ -57,7 +57,7 @@ func (op *AddItemEntityOperation) Apply(snapshot *Snapshot) {
 		return
 	}
 
-	snapshot.addActor(op.Author())
+	snapshot.addParticipant(op.Author())
 
 	for _, column := range snapshot.Columns {
 		if column.Id == op.ColumnId {
@@ -65,7 +65,7 @@ func (op *AddItemEntityOperation) Apply(snapshot *Snapshot) {
 			case bug.Interface:
 				column.Items = append(column.Items, &BugItem{
 					combinedId: entity.CombineIds(snapshot.Id(), e.Id()),
-					bug:        e,
+					Bug:        e,
 				})
 			}
 			return

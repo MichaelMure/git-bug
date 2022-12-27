@@ -96,7 +96,7 @@ func (op *CreateOperation) Apply(snap *Snapshot) {
 		})
 	}
 
-	snap.addActor(op.Author())
+	snap.addParticipant(op.Author())
 }
 
 // CreateDefaultColumns is a convenience function to create a board with the default columns
