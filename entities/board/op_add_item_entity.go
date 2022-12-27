@@ -89,14 +89,14 @@ func NewAddItemEntityOp(author identity.Interface, unixTime int64, columnId enti
 }
 
 // AddItemEntity is a convenience function to add an entity item to a Board
-func AddItemEntity(b *Board, author identity.Interface, unixTime int64, columnId entity.Id, e entity.Interface, metadata map[string]string) (*AddItemEntityOperation, error) {
+func AddItemEntity(b Interface, author identity.Interface, unixTime int64, columnId entity.Id, e entity.Interface, metadata map[string]string) (entity.CombinedId, *AddItemEntityOperation, error) {
 	op := NewAddItemEntityOp(author, unixTime, columnId, e)
 	for key, val := range metadata {
 		op.SetMetadata(key, val)
 	}
 	if err := op.Validate(); err != nil {
-		return nil, err
+		return entity.UnsetCombinedId, nil, err
 	}
 	b.Append(op)
-	return op, nil
+	return entity.CombineIds(b.Id(), op.Id()), op, nil
 }

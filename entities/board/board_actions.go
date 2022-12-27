@@ -23,33 +23,14 @@ func Push(repo repository.Repo, remote string) (string, error) {
 // Note: an author is necessary for the case where a merge commit is created, as this commit will
 // have an author and may be signed if a signing key is available.
 func Pull(repo repository.ClockedRepo, resolvers entity.Resolvers, remote string, mergeAuthor identity.Interface) error {
-	return dag.Pull(def, repo, resolvers, remote, mergeAuthor)
+	return dag.Pull(def, wrapper, repo, resolvers, remote, mergeAuthor)
 }
 
 // MergeAll will merge all the available remote board
 // Note: an author is necessary for the case where a merge commit is created, as this commit will
 // have an author and may be signed if a signing key is available.
 func MergeAll(repo repository.ClockedRepo, resolvers entity.Resolvers, remote string, mergeAuthor identity.Interface) <-chan entity.MergeResult {
-	out := make(chan entity.MergeResult)
-
-	go func() {
-		defer close(out)
-
-		results := dag.MergeAll(def, repo, resolvers, remote, mergeAuthor)
-
-		// wrap the dag.Entity into a complete Bug
-		for result := range results {
-			result := result
-			if result.Entity != nil {
-				result.Entity = &Board{
-					Entity: result.Entity.(*dag.Entity),
-				}
-			}
-			out <- result
-		}
-	}()
-
-	return out
+	return dag.MergeAll(def, wrapper, repo, resolvers, remote, mergeAuthor)
 }
 
 // Remove will remove a local bug from its entity.Id

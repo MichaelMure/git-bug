@@ -100,14 +100,17 @@ func (op *CreateOperation) Apply(snap *Snapshot) {
 }
 
 // CreateDefaultColumns is a convenience function to create a board with the default columns
-func CreateDefaultColumns(author identity.Interface, unixTime int64, title, description string) (*Board, *CreateOperation, error) {
-	return Create(author, unixTime, title, description, DefaultColumns)
+func CreateDefaultColumns(author identity.Interface, unixTime int64, title, description string, metadata map[string]string) (*Board, *CreateOperation, error) {
+	return Create(author, unixTime, title, description, DefaultColumns, metadata)
 }
 
 // Create is a convenience function to create a board
-func Create(author identity.Interface, unixTime int64, title, description string, columns []string) (*Board, *CreateOperation, error) {
+func Create(author identity.Interface, unixTime int64, title, description string, columns []string, metadata map[string]string) (*Board, *CreateOperation, error) {
 	b := NewBoard()
 	op := NewCreateOp(author, unixTime, title, description, columns)
+	for key, val := range metadata {
+		op.SetMetadata(key, val)
+	}
 	if err := op.Validate(); err != nil {
 		return nil, op, err
 	}

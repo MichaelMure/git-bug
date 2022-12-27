@@ -56,7 +56,7 @@ func NewSetDescriptionOp(author identity.Interface, unixTime int64, description 
 }
 
 // SetDescription is a convenience function to change a board description
-func SetDescription(b *Board, author identity.Interface, unixTime int64, description string) (*SetDescriptionOperation, error) {
+func SetDescription(b Interface, author identity.Interface, unixTime int64, description string, metadata map[string]string) (*SetDescriptionOperation, error) {
 	var lastDescriptionOp *SetDescriptionOperation
 	for _, op := range b.Operations() {
 		switch op := op.(type) {
@@ -73,6 +73,9 @@ func SetDescription(b *Board, author identity.Interface, unixTime int64, descrip
 	}
 
 	op := NewSetDescriptionOp(author, unixTime, description, was)
+	for key, val := range metadata {
+		op.SetMetadata(key, val)
+	}
 	if err := op.Validate(); err != nil {
 		return nil, err
 	}

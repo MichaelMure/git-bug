@@ -16,9 +16,12 @@ var _ Interface = &Board{}
 // 1: original format
 const formatVersion = 1
 
+const Typename = "board"
+const Namespace = "boards"
+
 var def = dag.Definition{
-	Typename:             "board",
-	Namespace:            "boards",
+	Typename:             Typename,
+	Namespace:            Namespace,
 	OperationUnmarshaler: operationUnmarshaler,
 	FormatVersion:        formatVersion,
 }
@@ -41,6 +44,10 @@ func NewBoard() *Board {
 	}
 }
 
+func wrapper(e *dag.Entity) *Board {
+	return &Board{Entity: e}
+}
+
 func simpleResolvers(repo repository.ClockedRepo) entity.Resolvers {
 	return entity.Resolvers{
 		&identity.Identity{}: identity.NewSimpleResolver(repo),
@@ -55,11 +62,17 @@ func Read(repo repository.ClockedRepo, id entity.Id) (*Board, error) {
 
 // ReadWithResolver will read a board from its Id, with a custom identity.Resolver
 func ReadWithResolver(repo repository.ClockedRepo, resolvers entity.Resolvers, id entity.Id) (*Board, error) {
-	e, err := dag.Read(def, repo, resolvers, id)
-	if err != nil {
-		return nil, err
-	}
-	return &Board{Entity: e}, nil
+	return dag.Read(def, wrapper, repo, resolvers, id)
+}
+
+// ReadAll read and parse all local boards
+func ReadAll(repo repository.ClockedRepo) <-chan entity.StreamedEntity[*Board] {
+	return dag.ReadAll(def, wrapper, repo, simpleResolvers(repo))
+}
+
+// ReadAllWithResolver read and parse all local boards
+func ReadAllWithResolver(repo repository.ClockedRepo, resolvers entity.Resolvers) <-chan entity.StreamedEntity[*Board] {
+	return dag.ReadAll(def, wrapper, repo, resolvers)
 }
 
 // Validate check if the Board data is valid

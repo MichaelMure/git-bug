@@ -33,10 +33,6 @@ type Snapshot struct {
 	Operations []dag.Operation
 }
 
-func (snap *Snapshot) AllOperations() []dag.Operation {
-	return snap.Operations
-}
-
 // Id returns the Board identifier
 func (snap *Snapshot) Id() entity.Id {
 	if snap.id == "" {
@@ -44,6 +40,14 @@ func (snap *Snapshot) Id() entity.Id {
 		panic("no id")
 	}
 	return snap.id
+}
+
+func (snap *Snapshot) AllOperations() []dag.Operation {
+	return snap.Operations
+}
+
+func (snap *Snapshot) AppendOperation(op dag.Operation) {
+	snap.Operations = append(snap.Operations, op)
 }
 
 // EditTime returns the last time the board was modified
@@ -65,3 +69,34 @@ func (snap *Snapshot) addActor(actor identity.Interface) {
 
 	snap.Actors = append(snap.Actors, actor)
 }
+
+// HasActor return true if the id is a actor
+func (snap *Snapshot) HasActor(id entity.Id) bool {
+	for _, p := range snap.Actors {
+		if p.Id() == id {
+			return true
+		}
+	}
+	return false
+}
+
+// HasAnyActor return true if one of the ids is a actor
+func (snap *Snapshot) HasAnyActor(ids ...entity.Id) bool {
+	for _, id := range ids {
+		if snap.HasActor(id) {
+			return true
+		}
+	}
+	return false
+}
+
+func (snap *Snapshot) ItemCount() int {
+	var count int
+	for _, column := range snap.Columns {
+		count += len(column.Items)
+	}
+	return count
+}
+
+// IsAuthored is a sign post method for gqlgen
+func (snap *Snapshot) IsAuthored() {}
