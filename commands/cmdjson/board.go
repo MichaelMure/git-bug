@@ -49,8 +49,8 @@ type BoardColumn struct {
 
 func NewBoardColumn(column *board.Column) BoardColumn {
 	jsonColumn := BoardColumn{
-		Id:      column.Id.String(),
-		HumanId: column.Id.Human(),
+		Id:      column.CombinedId.String(),
+		HumanId: column.CombinedId.Human(),
 		Name:    column.Name,
 	}
 	jsonColumn.Items = make([]any, len(column.Items))

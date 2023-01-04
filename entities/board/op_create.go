@@ -86,13 +86,20 @@ func (op *CreateOperation) Apply(snap *Snapshot) {
 	snap.CreateTime = op.Time()
 
 	for _, name := range op.Columns {
-		// we derive a unique Id from the original column name
-		id := entity.DeriveId([]byte(name))
+		// we derive a unique ID from:
+		// - the ID of the operation that created the column
+		// - the original column name
+		id := entity.DeriveId(append([]byte(op.Id()), []byte(name)...))
+
+		// we derived the combined ID by interleaving the board ID (the same in
+		// this case).
+		combinedID := entity.CombineIds(snap.id, id)
 
 		snap.Columns = append(snap.Columns, &Column{
-			Id:    id,
-			Name:  name,
-			Items: nil,
+			Id:         id,
+			CombinedId: combinedID,
+			Name:       name,
+			Items:      nil,
 		})
 	}
 

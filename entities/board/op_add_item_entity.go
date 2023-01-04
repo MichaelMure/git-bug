@@ -9,11 +9,11 @@ import (
 	"github.com/MichaelMure/git-bug/entity/dag"
 )
 
-// itemEntityType indicate the type of entity board item
-type itemEntityType string
+// ItemEntityType indicate the type of entity board item
+type ItemEntityType string
 
 const (
-	entityTypeBug itemEntityType = "bug"
+	EntityTypeBug ItemEntityType = "bug"
 )
 
 var _ Operation = &AddItemEntityOperation{}
@@ -21,7 +21,7 @@ var _ Operation = &AddItemEntityOperation{}
 type AddItemEntityOperation struct {
 	dag.OpBase
 	ColumnId   entity.Id        `json:"column"`
-	EntityType itemEntityType   `json:"entity_type"`
+	EntityType ItemEntityType   `json:"entity_type"`
 	EntityId   entity.Id        `json:"entity_id"`
 	entity     entity.Interface // not serialized
 }
@@ -40,7 +40,7 @@ func (op *AddItemEntityOperation) Validate() error {
 	}
 
 	switch op.EntityType {
-	case entityTypeBug:
+	case EntityTypeBug:
 	default:
 		return fmt.Errorf("unknown entity type")
 	}
@@ -57,40 +57,39 @@ func (op *AddItemEntityOperation) Apply(snapshot *Snapshot) {
 		return
 	}
 
-	snapshot.addParticipant(op.Author())
+	// Recreate the combined Id to match on
+	combinedId := entity.CombineIds(snapshot.Id(), op.ColumnId)
 
 	for _, column := range snapshot.Columns {
-		if column.Id == op.ColumnId {
-			switch e := op.entity.(type) {
-			case bug.Interface:
+		if column.CombinedId == combinedId {
+			switch op.EntityType {
+			case EntityTypeBug:
 				column.Items = append(column.Items, &BugItem{
-					combinedId: entity.CombineIds(snapshot.Id(), e.Id()),
-					Bug:        e,
+					combinedId: entity.CombineIds(snapshot.Id(), op.entity.Id()),
+					Bug:        op.entity.(bug.Interface),
 				})
 			}
+			snapshot.addParticipant(op.Author())
 			return
 		}
 	}
 }
 
-func NewAddItemEntityOp(author identity.Interface, unixTime int64, columnId entity.Id, e entity.Interface) *AddItemEntityOperation {
-	switch e := e.(type) {
-	case bug.Interface:
-		return &AddItemEntityOperation{
-			OpBase:     dag.NewOpBase(AddItemEntityOp, author, unixTime),
-			ColumnId:   columnId,
-			EntityType: entityTypeBug,
-			EntityId:   e.Id(),
-			entity:     e,
-		}
-	default:
-		panic("invalid entity type")
+func NewAddItemEntityOp(author identity.Interface, unixTime int64, columnId entity.Id, entityType ItemEntityType, e entity.Interface) *AddItemEntityOperation {
+	// Note: due to import cycle we are not able to properly check the type of the entity here;
+	// proceed with caution!
+	return &AddItemEntityOperation{
+		OpBase:     dag.NewOpBase(AddItemEntityOp, author, unixTime),
+		ColumnId:   columnId,
+		EntityType: entityType,
+		EntityId:   e.Id(),
+		entity:     e,
 	}
 }
 
 // AddItemEntity is a convenience function to add an entity item to a Board
-func AddItemEntity(b Interface, author identity.Interface, unixTime int64, columnId entity.Id, e entity.Interface, metadata map[string]string) (entity.CombinedId, *AddItemEntityOperation, error) {
-	op := NewAddItemEntityOp(author, unixTime, columnId, e)
+func AddItemEntity(b Interface, author identity.Interface, unixTime int64, columnId entity.Id, entityType ItemEntityType, e entity.Interface, metadata map[string]string) (entity.CombinedId, *AddItemEntityOperation, error) {
+	op := NewAddItemEntityOp(author, unixTime, columnId, entityType, e)
 	for key, val := range metadata {
 		op.SetMetadata(key, val)
 	}

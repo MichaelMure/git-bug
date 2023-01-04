@@ -1,12 +1,14 @@
 package boardcmd
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/spf13/cobra"
 
 	buginput "github.com/MichaelMure/git-bug/commands/bug/input"
 	"github.com/MichaelMure/git-bug/commands/execenv"
+	_select "github.com/MichaelMure/git-bug/commands/select"
 	"github.com/MichaelMure/git-bug/entity"
 )
 
@@ -43,7 +45,6 @@ func newBoardAddDraftCommand() *cobra.Command {
 		"Take the message from the given file. Use - to read the message from the standard input")
 	flags.StringVarP(&options.column, "column", "c", "1",
 		"The column to add to. Either a column Id or prefix, or the column number starting from 1.")
-	// _ = cmd.MarkFlagRequired("column")
 	_ = cmd.RegisterFlagCompletionFunc("column", ColumnCompletion(env))
 	flags.BoolVar(&options.nonInteractive, "non-interactive", false, "Do not ask for user input")
 
@@ -52,18 +53,29 @@ func newBoardAddDraftCommand() *cobra.Command {
 
 func runBoardAddDraft(env *execenv.Env, opts boardAddDraftOptions, args []string) error {
 	b, args, err := ResolveSelected(env.Backend, args)
-	if err != nil {
+
+	var columnId entity.CombinedId
+
+	switch {
+	case err == nil:
+		// try to parse as column number
+		index, err := strconv.Atoi(opts.column)
+		if err == nil {
+			if index-1 >= 0 && index-1 < len(b.Snapshot().Columns) {
+				columnId = b.Snapshot().Columns[index-1].CombinedId
+			} else {
+				return fmt.Errorf("invalid column")
+			}
+		}
+		fallthrough // could be an Id
+	case _select.IsErrNoValidId(err):
+		b, columnId, err = env.Backend.Boards().ResolveColumn(opts.column)
+		if err != nil {
+			return err
+		}
+	default:
+		// actual error
 		return err
-	}
-
-	var columnId entity.Id
-
-	index, err := strconv.Atoi(opts.column)
-	if err == nil && index-1 >= 0 && index-1 < len(b.Snapshot().Columns) {
-		columnId = b.Snapshot().Columns[index-1].Id
-	} else {
-		// TODO: ID or combined ID?
-		// TODO: resolve
 	}
 
 	if opts.messageFile != "" && opts.message == "" {

@@ -19,6 +19,7 @@ git-bug board [flags]
 ### SEE ALSO
 
 * [git-bug](git-bug.md)	 - A bug tracker embedded in Git
+* [git-bug board add-bug](git-bug_board_add-bug.md)	 - Add a bug to a board
 * [git-bug board add-draft](git-bug_board_add-draft.md)	 - Add a draft item to a board
 * [git-bug board description](git-bug_board_description.md)	 - Display the description of a board
 * [git-bug board deselect](git-bug_board_deselect.md)	 - Clear the implicitly selected board

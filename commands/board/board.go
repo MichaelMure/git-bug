@@ -67,6 +67,7 @@ func NewBoardCommand() *cobra.Command {
 	cmd.AddCommand(newBoardDescriptionCommand())
 	cmd.AddCommand(newBoardTitleCommand())
 	cmd.AddCommand(newBoardAddDraftCommand())
+	cmd.AddCommand(newBoardAddBugCommand())
 
 	return cmd
 }

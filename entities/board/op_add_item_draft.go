@@ -59,10 +59,11 @@ func (op *AddItemDraftOperation) Validate() error {
 }
 
 func (op *AddItemDraftOperation) Apply(snapshot *Snapshot) {
-	snapshot.addParticipant(op.Author())
+	// Recreate the combined Id to match on
+	combinedId := entity.CombineIds(snapshot.Id(), op.ColumnId)
 
 	for _, column := range snapshot.Columns {
-		if column.Id == op.ColumnId {
+		if column.CombinedId == combinedId {
 			column.Items = append(column.Items, &Draft{
 				combinedId: entity.CombineIds(snapshot.id, op.Id()),
 				Author:     op.Author(),
@@ -70,6 +71,8 @@ func (op *AddItemDraftOperation) Apply(snapshot *Snapshot) {
 				Message:    op.Message,
 				unixTime:   timestamp.Timestamp(op.UnixTime),
 			})
+
+			snapshot.addParticipant(op.Author())
 			return
 		}
 	}

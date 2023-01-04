@@ -1,6 +1,7 @@
 package board
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/MichaelMure/git-bug/entities/identity"
@@ -9,9 +10,12 @@ import (
 )
 
 type Column struct {
-	Id    entity.Id
-	Name  string
-	Items []Item
+	// id is the identifier of the column within the board context
+	Id entity.Id
+	// CombinedId is the global identifier of the column
+	CombinedId entity.CombinedId
+	Name       string
+	Items      []Item
 }
 
 type Item interface {
@@ -58,6 +62,17 @@ func (snap *Snapshot) EditTime() time.Time {
 	}
 
 	return snap.Operations[len(snap.Operations)-1].Time()
+}
+
+// SearchColumn will search for a column matching the given id
+func (snap *Snapshot) SearchColumn(id entity.CombinedId) (*Column, error) {
+	for _, column := range snap.Columns {
+		if column.CombinedId == id {
+			return column, nil
+		}
+	}
+
+	return nil, fmt.Errorf("column not found")
 }
 
 // append the operation author to the participants list

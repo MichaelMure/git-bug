@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"errors"
 	"time"
 
 	"github.com/MichaelMure/git-bug/entities/board"
@@ -41,6 +42,50 @@ func NewRepoCacheBoard(repo repository.ClockedRepo,
 	)
 
 	return &RepoCacheBoard{SubCache: sc}
+}
+
+func (c *RepoCacheBoard) ResolveColumn(prefix string) (*BoardCache, entity.CombinedId, error) {
+	boardPrefix, _ := entity.SeparateIds(prefix)
+	boardCandidate := make([]entity.Id, 0, 5)
+
+	// build a list of possible matching boards
+	c.mu.RLock()
+	for _, excerpt := range c.excerpts {
+		if excerpt.Id().HasPrefix(boardPrefix) {
+			boardCandidate = append(boardCandidate, excerpt.Id())
+		}
+	}
+	c.mu.RUnlock()
+
+	matchingBoardIds := make([]entity.Id, 0, 5)
+	matchingColumnId := entity.UnsetCombinedId
+	var matchingBoard *BoardCache
+
+	// search for matching columns
+	// searching every board candidate allow for some collision with the board prefix only,
+	// before being refined with the full column prefix
+	for _, boardId := range boardCandidate {
+		b, err := c.Resolve(boardId)
+		if err != nil {
+			return nil, entity.UnsetCombinedId, err
+		}
+
+		for _, column := range b.Snapshot().Columns {
+			if column.CombinedId.HasPrefix(prefix) {
+				matchingBoardIds = append(matchingBoardIds, boardId)
+				matchingBoard = b
+				matchingColumnId = column.CombinedId
+			}
+		}
+	}
+
+	if len(matchingBoardIds) > 1 {
+		return nil, entity.UnsetCombinedId, entity.NewErrMultipleMatch("board/column", matchingBoardIds)
+	} else if len(matchingBoardIds) == 0 {
+		return nil, entity.UnsetCombinedId, errors.New("column doesn't exist")
+	}
+
+	return matchingBoard, matchingColumnId, nil
 }
 
 func (c *RepoCacheBoard) New(title, description string, columns []string) (*BoardCache, *board.CreateOperation, error) {

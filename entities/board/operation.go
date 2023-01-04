@@ -65,7 +65,7 @@ func operationUnmarshaler(raw json.RawMessage, resolvers entity.Resolvers) (dag.
 	switch op := op.(type) {
 	case *AddItemEntityOperation:
 		switch op.EntityType {
-		case entityTypeBug:
+		case EntityTypeBug:
 			op.entity, err = entity.Resolve[bug.Interface](resolvers, op.EntityId)
 		default:
 			return nil, fmt.Errorf("unknown entity type")
