@@ -85,12 +85,16 @@ func (i *Iterator) NextIssue() bool {
 		return false
 	}
 
+	if !more {
+		return false
+	}
+
 	// Also reset the other sub iterators as they would
 	// no longer be valid
 	i.comment.Reset(i.issue.Value().Index)
 	i.label.Reset(i.issue.Value().Index)
 
-	return more
+	return true
 }
 
 func (i *Iterator) IssueValue() *gitea.Issue {
