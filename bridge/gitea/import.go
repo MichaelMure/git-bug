@@ -166,7 +166,14 @@ func (gi *giteaImporter) ensurePerson(repo *cache.RepoCache, loginName string) (
 
 	user, _, err := gi.client.GetUserInfo(loginName)
 	if err != nil {
-		return nil, err
+		if err.Error() == "404 Not Found" {
+			user.FullName = loginName
+			user.UserName = loginName
+			user.Email = loginName + "@fake-email.com"
+			user.AvatarURL = ""
+		} else {
+			return nil, err
+		}
 	}
 
 	i, err = repo.NewIdentityRaw(
