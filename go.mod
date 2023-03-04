@@ -22,6 +22,7 @@ require (
 	github.com/phayes/freeport v0.0.0-20171002181615-b8543db493a5
 	github.com/pkg/errors v0.9.1
 	github.com/selesy/gokart-pre v0.5.2-rc1
+	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/shurcooL/githubv4 v0.0.0-20190601194912-068505affed7
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/spf13/cobra v1.6.1
@@ -43,11 +44,15 @@ require (
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d // indirect
 	github.com/cloudflare/circl v1.3.1 // indirect
+	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/lithammer/dedent v1.1.0 // indirect
 	github.com/owenrumney/go-sarif v1.0.11 // indirect
 	github.com/pjbgf/sha1cd v0.2.3 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
+	github.com/tklauser/go-sysconf v0.3.11 // indirect
+	github.com/tklauser/numcpus v0.6.0 // indirect
+	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	github.com/zclconf/go-cty v1.8.4 // indirect
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
 )

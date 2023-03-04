@@ -9,8 +9,8 @@ import (
 
 	"github.com/MichaelMure/git-bug/entity"
 	"github.com/MichaelMure/git-bug/repository"
+	"github.com/MichaelMure/git-bug/util/findproc"
 	"github.com/MichaelMure/git-bug/util/multierr"
-	"github.com/MichaelMure/git-bug/util/process"
 )
 
 // 1: original format
@@ -290,13 +290,13 @@ func repoIsAvailable(repo repository.RepoStorage, events chan BuildEvent) error 
 			return fmt.Errorf("the lock file should be < 10 bytes")
 		}
 
-		pid, err := strconv.Atoi(string(buf))
+		pid, err := strconv.ParseInt(string(buf), 10, 32)
 		if err != nil {
 			return err
 		}
 
-		if process.IsRunning(pid) {
-			return fmt.Errorf("the repository you want to access is already locked by the process pid %d", pid)
+		if findproc.IsRunning(int32(pid)) {
+			return fmt.Errorf("The repository you want to access is already locked by the git-bug process pid %d", pid)
 		}
 
 		// The lock file is just laying there after a crash, clean it
