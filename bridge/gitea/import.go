@@ -12,7 +12,6 @@ import (
 	"github.com/MichaelMure/git-bug/bridge/core/auth"
 	"github.com/MichaelMure/git-bug/bridge/gitea/iterator"
 	"github.com/MichaelMure/git-bug/cache"
-	"github.com/MichaelMure/git-bug/entities/bug"
 	"github.com/MichaelMure/git-bug/entity"
 	"github.com/MichaelMure/git-bug/util/text"
 )
@@ -110,7 +109,7 @@ func (gi *giteaImporter) ensureIssue(repo *cache.RepoCache, issue *gitea.Issue) 
 	giteaID := strconv.FormatInt(issue.Index, 10)
 
 	// resolve bug
-	b, err := repo.ResolveBugMatcher(func(excerpt *cache.BugExcerpt) bool {
+	b, err := repo.Bugs().ResolveMatcher(func(excerpt *cache.BugExcerpt) bool {
 		return excerpt.CreateMetadata[core.MetaKeyOrigin] == target &&
 			excerpt.CreateMetadata[metaKeyGiteaID] == giteaID &&
 			excerpt.CreateMetadata[metaKeyGiteaBaseURL] == gi.conf[confKeyBaseURL] &&
@@ -120,12 +119,12 @@ func (gi *giteaImporter) ensureIssue(repo *cache.RepoCache, issue *gitea.Issue) 
 	if err == nil {
 		return b, nil
 	}
-	if err != bug.ErrBugNotExist {
+	if !entity.IsErrNotFound(err) {
 		return nil, err
 	}
 
 	// if bug was never imported, create bug
-	b, _, err = repo.NewBugRaw(
+	b, _, err = repo.Bugs().NewRaw(
 		author,
 		issue.Created.Unix(),
 		text.CleanupOneLine(issue.Title),
@@ -152,7 +151,7 @@ func (gi *giteaImporter) ensureIssue(repo *cache.RepoCache, issue *gitea.Issue) 
 
 func (gi *giteaImporter) ensurePerson(repo *cache.RepoCache, loginName string) (*cache.IdentityCache, error) {
 	// Look first in the cache
-	i, err := repo.ResolveIdentityImmutableMetadata(metaKeyGiteaLogin, loginName)
+	i, err := repo.Identities().ResolveIdentityImmutableMetadata(metaKeyGiteaLogin, loginName)
 	if err == nil {
 		return i, nil
 	}
@@ -176,7 +175,7 @@ func (gi *giteaImporter) ensurePerson(repo *cache.RepoCache, loginName string) (
 		}
 	}
 
-	i, err = repo.NewIdentityRaw(
+	i, err = repo.Identities().NewRaw(
 		user.FullName,
 		user.Email,
 		user.UserName,
