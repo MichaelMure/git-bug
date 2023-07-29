@@ -204,22 +204,22 @@ The web UI interact with the backend through a GraphQL API. The schema is availa
 
 |                                                 | Gitea | Github | Gitlab | Jira | Launchpad |
 |-------------------------------------------------| :---: |:------:|:------:|:----:|:---------:|
-| **incremental**<br/>(can import more than once) |   ❓  |   ✅   |   ✅   |  ✅  |    ❌     |
-| **with resume**<br/>(download only new data)    |   ❓  |   ✅   |   ✅   |  ✅  |    ❌     |
-| **identities**                                  |   ❓  |   🟠   |   🟠   |  🟠  |    🟠     |
-| **bugs**                                        |   ❓  |   ✅   |   ✅   |  ✅  |    🟠     |
-| **board**                                       |   ❓  |   ❌   |   ❌   |  ❌  |    ❌     |
-| **media/files**                                 |   ❓  |   ❌   |   ❌   |  ❌  |    ❌     |
-| **automated test suite**                        |   ❓  |   ✅   |   ✅   |  ❌  |    ❌     |
+| **incremental**<br/>(can import more than once) |   🟠  |   ✅   |   ✅   |  ✅  |    ❌     |
+| **with resume**<br/>(download only new data)    |   ❌  |   ✅   |   ✅   |  ✅  |    ❌     |
+| **identities**                                  |   🟠  |   🟠   |   🟠   |  🟠  |    🟠     |
+| **bugs**                                        |   ❌  |   ✅   |   ✅   |  ✅  |    🟠     |
+| **board**                                       |   ❌  |   ❌   |   ❌   |  ❌  |    ❌     |
+| **media/files**                                 |   ❌  |   ❌   |   ❌   |  ❌  |    ❌     |
+| **automated test suite**                        |   ❌  |   ✅   |   ✅   |  ❌  |    ❌     |
 
 ### Exporter implementations
 
 |                          | Gitea | Github | Gitlab | Jira | Launchpad |
 |--------------------------| :---: |:------:|:------:|:----:|:---------:|
-| **identities**           |   ❓  |   🟠   |   🟠   |  🟠  |     🟠    |
-| **bug**                  |   ❓  |   ✅   |   ✅   |  ✅  |     ❌    |
-| **board**                |   ❓  |   ❌   |   ❌   |  ❌  |     ❌    |
-| **automated test suite** |   ❓  |   ✅   |   ✅   |  ❌  |     ❌    |
+| **identities**           |   ❌  |   🟠   |   🟠   |  🟠  |     🟠    |
+| **bug**                  |   ❌  |   ✅   |   ✅   |  ✅  |     ❌    |
+| **board**                |   ❌  |   ❌   |   ❌   |  ❌  |     ❌    |
+| **automated test suite** |   ❌  |   ✅   |   ✅   |  ❌  |     ❌    |
 
 #### Bridge usage
 

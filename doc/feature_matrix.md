@@ -72,37 +72,37 @@ General capabilities of importers:
 
 |                                                 | Gitea | Github | Gitlab | Jira | Launchpad |
 | ----------------------------------------------- | :---: | :----: | :----: | :--: | :-------: |
-| **incremental**<br/>(can import more than once) |  ❓   |   ✅   |   ✅   |  ✅  |    ❌     |
-| **with resume**<br/>(download only new data)    |  ❓   |   ✅   |   ✅   |  ✅  |    ❌     |
-| **media/files**                                 |  ❓   |   ❌   |   ❌   |  ❌  |    ❌     |
-| **automated test suite**                        |  ❓   |   ✅   |   ✅   |  ❌  |    ❌     |
+| **incremental**<br/>(can import more than once) |  🟠   |   ✅   |   ✅   |  ✅  |    ❌     |
+| **with resume**<br/>(download only new data)    |  ❌   |   ✅   |   ✅   |  ✅  |    ❌     |
+| **media/files**                                 |  ❌   |   ❌   |   ❌   |  ❌  |    ❌     |
+| **automated test suite**                        |  ❌   |   ✅   |   ✅   |  ❌  |    ❌     |
 
 Identity support:
 
 |                   | Gitea | Github | Gitlab | Jira | Launchpad |
 | ----------------- | :---: | :----: | :----: | :--: | :-------: |
-| **identities**    |  ❓   |   ✅   |   ✅   |  ✅  |    ✅     |
-| identities update |  ❓   |   ❌   |   ❌   |  ❌  |    ❌     |
-| public keys       |  ❓   |   ❌   |   ❌   |  ❌  |    ❌     |
+| **identities**    |  🟠   |   ✅   |   ✅   |  ✅  |    ✅     |
+| identities update |  ❌   |   ❌   |   ❌   |  ❌  |    ❌     |
+| public keys       |  ❌   |   ❌   |   ❌   |  ❌  |    ❌     |
 
 Bug support:
 
 |                  | Gitea | Github | Gitlab | Jira | Launchpad |
 | ---------------- | :---: | :----: | :----: | :--: | :-------: |
-| **bug**          |  ❓   |   ✅   |   ✅   |  ✅  |    ✅     |
-| comments         |  ❓   |   ✅   |   ✅   |  ✅  |    ✅     |
-| comment editions |  ❓   |   ✅   |   ❌   |  ✅  |    ❌     |
-| labels           |  ❓   |   ✅   |   ✅   |  ✅  |    ❌     |
-| status           |  ❓   |   ✅   |   ✅   |  ✅  |    ❌     |
-| title edition    |  ❓   |   ✅   |   ✅   |  ✅  |    ❌     |
-| Assignee         |  ❓   |   ❌   |   ❌   |  ❌  |    ❌     |
-| Milestone        |  ❓   |   ❌   |   ❌   |  ❌  |    ❌     |
+| **bug**          |  🟠   |   ✅   |   ✅   |  ✅  |    ✅     |
+| comments         |  ❌   |   ✅   |   ✅   |  ✅  |    ✅     |
+| comment editions |  ❌   |   ✅   |   ❌   |  ✅  |    ❌     |
+| labels           |  ❌   |   ✅   |   ✅   |  ✅  |    ❌     |
+| status           |  ❌   |   ✅   |   ✅   |  ✅  |    ❌     |
+| title edition    |  ❌   |   ✅   |   ✅   |  ✅  |    ❌     |
+| Assignee         |  ❌   |   ❌   |   ❌   |  ❌  |    ❌     |
+| Milestone        |  ❌   |   ❌   |   ❌   |  ❌  |    ❌     |
 
 Board support:
 
 |           | Gitea | Github | Gitlab | Jira | Launchpad |
 | --------- | :---: | :----: | :----: | :--: | :-------: |
-| **board** |  ❓   |   ❌   |   ❌   |  ❌  |    ❌     |
+| **board** |  ❌   |   ❌   |   ❌   |  ❌  |    ❌     |
 
 ### Exporters
 
@@ -110,16 +110,16 @@ Board support:
 
 |                                                 | Gitea | Github | Gitlab | Jira | Launchpad |
 | ----------------------------------------------- | :---: | :----: | :----: | :--: |:---------:|
-| **incremental**<br/>(can export more than once) |  ❓   |   ✅   |   ✅   |  ✅  |     ❓    |
-| **with resume**<br/>(upload only new data)      |  ❓   |   ✅   |   ✅   |  ✅  |     ❓    |
-| **automated test suite**                        |  ❓   |   ✅   |   ✅   |  ❌  |     ❓    |
+| **incremental**<br/>(can export more than once) |  ❌   |   ✅   |   ✅   |  ✅  |     ❓    |
+| **with resume**<br/>(upload only new data)      |  ❌   |   ✅   |   ✅   |  ✅  |     ❓    |
+| **automated test suite**                        |  ❌   |   ✅   |   ✅   |  ❌  |     ❓    |
 
 **Identity support**:
 
 |                   | Gitea | Github | Gitlab | Jira | Launchpad |
 | ----------------- | :---: | :----: | :----: | :--: |:---------:|
-| **identities**    |  ❓   |   ✅   |   ✅   |  ✅  |     ❓    |
-| identities update |  ❓   |   ❌   |   ❌   |  ❌  |     ❓    |
+| **identities**    |  ❌   |   ✅   |   ✅   |  ✅  |     ❓    |
+| identities update |  ❌   |   ❌   |   ❌   |  ❌  |     ❓    |
 
 Note: as the target bug tracker require accounts and credentials, there is only so much that an exporter can do about identities. A bridge should be able to load and use credentials for multiple remote account, but when  they are not available, the corresponding changes can't be replicated.
 
@@ -127,11 +127,11 @@ Note: as the target bug tracker require accounts and credentials, there is only 
 
 |                  | Gitea | Github | Gitlab | Jira | Launchpad |
 | ---------------- | :---: | :----: | :----: | :--: |:---------:|
-| **bugs**         |  ❓   |   ✅   |   ✅   |  ✅  |     ❓    |
-| comments         |  ❓   |   ✅   |   ✅   |  ✅  |     ❓    |
-| comment editions |  ❓   |   ✅   |   ✅   |  ✅  |     ❓    |
-| labels           |  ❓   |   ✅   |   ✅   |  ✅  |     ❓    |
-| status           |  ❓   |   ✅   |   ✅   |  ✅  |     ❓    |
-| title edition    |  ❓   |   ✅   |   ✅   |  ✅  |     ❓    |
-| Assignee         |  ❓   |   ❌   |   ❌   |  ❌  |     ❓    |
-| Milestone        |  ❓   |   ❌   |   ❌   |  ❌  |     ❓    |
+| **bugs**         |  ❌   |   ✅   |   ✅   |  ✅  |     ❓    |
+| comments         |  ❌   |   ✅   |   ✅   |  ✅  |     ❓    |
+| comment editions |  ❌   |   ✅   |   ✅   |  ✅  |     ❓    |
+| labels           |  ❌   |   ✅   |   ✅   |  ✅  |     ❓    |
+| status           |  ❌   |   ✅   |   ✅   |  ✅  |     ❓    |
+| title edition    |  ❌   |   ✅   |   ✅   |  ✅  |     ❓    |
+| Assignee         |  ❌   |   ❌   |   ❌   |  ❌  |     ❓    |
+| Milestone        |  ❌   |   ❌   |   ❌   |  ❌  |     ❓    |
