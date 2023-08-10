@@ -202,24 +202,24 @@ The web UI interact with the backend through a GraphQL API. The schema is availa
 
 ### Importer implementations
 
-|                                                 | Github | Gitlab | Jira | Launchpad |
-|-------------------------------------------------|:------:|:------:|:----:|:---------:|
-| **incremental**<br/>(can import more than once) |   ✅    |   ✅    |  ✅   |     ❌     |
-| **with resume**<br/>(download only new data)    |   ✅    |   ✅    |  ✅   |     ❌     |
-| **identities**                                  |   🟠   |   🟠   |  🟠  |    🟠     |
-| **bugs**                                        |   ✅    |   ✅    |  ✅   |    🟠     |
-| **board**                                       |   ❌    |   ❌    |  ❌   |     ❌     |
-| **media/files**                                 |   ❌    |   ❌    |  ❌   |     ❌     |
-| **automated test suite**                        |   ✅    |   ✅    |  ❌   |     ❌     |
+|                                                 | Gitea | Github | Gitlab | Jira | Launchpad |
+|-------------------------------------------------| :---: |:------:|:------:|:----:|:---------:|
+| **incremental**<br/>(can import more than once) |   🟠  |   ✅   |   ✅   |  ✅  |    ❌     |
+| **with resume**<br/>(download only new data)    |   ❌  |   ✅   |   ✅   |  ✅  |    ❌     |
+| **identities**                                  |   🟠  |   🟠   |   🟠   |  🟠  |    🟠     |
+| **bugs**                                        |   ❌  |   ✅   |   ✅   |  ✅  |    🟠     |
+| **board**                                       |   ❌  |   ❌   |   ❌   |  ❌  |    ❌     |
+| **media/files**                                 |   ❌  |   ❌   |   ❌   |  ❌  |    ❌     |
+| **automated test suite**                        |   ❌  |   ✅   |   ✅   |  ❌  |    ❌     |
 
 ### Exporter implementations
 
-|                          | Github | Gitlab | Jira | Launchpad |
-|--------------------------|:------:|:------:|:----:|:---------:|
-| **identities**           |   🟠   |   🟠   |  🟠  |    🟠     |
-| **bug**                  |   ✅    |   ✅    |  ✅   |     ❌     |
-| **board**                |   ❌    |   ❌    |  ❌   |     ❌     |
-| **automated test suite** |   ✅    |   ✅    |  ❌   |     ❌     |
+|                          | Gitea | Github | Gitlab | Jira | Launchpad |
+|--------------------------| :---: |:------:|:------:|:----:|:---------:|
+| **identities**           |   ❌  |   🟠   |   🟠   |  🟠  |     🟠    |
+| **bug**                  |   ❌  |   ✅   |   ✅   |  ✅  |     ❌    |
+| **board**                |   ❌  |   ❌   |   ❌   |  ❌  |     ❌    |
+| **automated test suite** |   ❌  |   ✅   |   ✅   |  ❌  |     ❌    |
 
 #### Bridge usage
 

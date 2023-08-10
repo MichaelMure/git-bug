@@ -3,6 +3,7 @@ module github.com/MichaelMure/git-bug
 go 1.19
 
 require (
+	code.gitea.io/sdk/gitea v0.14.0
 	github.com/99designs/gqlgen v0.17.20
 	github.com/99designs/keyring v1.2.2
 	github.com/MichaelMure/go-term-text v0.3.1
@@ -45,6 +46,7 @@ require (
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d // indirect
 	github.com/cloudflare/circl v1.3.1 // indirect
+	github.com/hashicorp/go-version v1.2.1 // indirect
 	github.com/lithammer/dedent v1.1.0 // indirect
 	github.com/owenrumney/go-sarif v1.0.11 // indirect
 	github.com/pjbgf/sha1cd v0.2.3 // indirect
