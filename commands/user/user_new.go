@@ -90,7 +90,8 @@ func runUserNew(env *execenv.Env, opts userNewOptions) error {
 	}
 
 	env.Err.Println()
-	env.Out.Println(id.Id())
+	env.Out.Print(id.Id())
+	env.Err.Println()
 
 	return nil
 }

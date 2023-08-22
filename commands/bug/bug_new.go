@@ -70,7 +70,8 @@ func runBugNew(env *execenv.Env, opts bugNewOptions) error {
 		return err
 	}
 
-	env.Out.Printf("%s created\n", b.Id().Human())
+	env.Out.Printf("%s", b.Id().Human())
+	env.Err.Println(" created")
 
 	return nil
 }
