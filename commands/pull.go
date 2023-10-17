@@ -8,6 +8,7 @@ import (
 	"github.com/MichaelMure/git-bug/commands/completion"
 	"github.com/MichaelMure/git-bug/commands/execenv"
 	"github.com/MichaelMure/git-bug/entity"
+	"github.com/MichaelMure/git-bug/repository"
 )
 
 func newPullCommand(env *execenv.Env) *cobra.Command {
@@ -25,13 +26,18 @@ func newPullCommand(env *execenv.Env) *cobra.Command {
 }
 
 func runPull(env *execenv.Env, args []string) error {
-	if len(args) > 1 {
+	var remote string
+	switch {
+	case len(args) > 1:
 		return errors.New("Only pulling from one remote at a time is supported")
-	}
-
-	remote := "origin"
-	if len(args) == 1 {
+	case len(args) == 1:
 		remote = args[0]
+	default:
+		v, err := repository.GetDefaultString("git-bug.remote", env.Repo.AnyConfig(), "origin")
+		if err != nil {
+			return err
+		}
+		remote = v
 	}
 
 	env.Out.Println("Fetching remote ...")

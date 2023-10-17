@@ -60,6 +60,17 @@ type ConfigWrite interface {
 	RemoveAll(keyPrefix string) error
 }
 
+func GetDefaultString(key string, cfg ConfigRead, def string) (string, error) {
+	val, err := cfg.ReadString(key)
+	if err == nil {
+		return val, nil
+	} else if errors.Is(err, ErrNoConfigEntry) {
+		return def, nil
+	} else {
+		return "", err
+	}
+}
+
 func ParseTimestamp(s string) (time.Time, error) {
 	timestamp, err := strconv.Atoi(s)
 	if err != nil {
