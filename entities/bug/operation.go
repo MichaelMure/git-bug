@@ -18,6 +18,7 @@ const (
 	EditCommentOp
 	NoOpOp
 	SetMetadataOp
+	DeleteCommentOp
 )
 
 // Operation define the interface to fulfill for an edit operation of a Bug
@@ -45,6 +46,8 @@ func operationUnmarshaler(raw json.RawMessage, resolvers entity.Resolvers) (dag.
 		op = &CreateOperation{}
 	case EditCommentOp:
 		op = &EditCommentOperation{}
+	case DeleteCommentOp:
+		op = &DeleteCommentOperation{}
 	case LabelChangeOp:
 		op = &LabelChangeOperation{}
 	case NoOpOp:

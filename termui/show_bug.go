@@ -12,6 +12,7 @@ import (
 	"github.com/MichaelMure/git-bug/cache"
 	"github.com/MichaelMure/git-bug/entities/bug"
 	"github.com/MichaelMure/git-bug/entities/common"
+	"github.com/MichaelMure/git-bug/entities/identity"
 	"github.com/MichaelMure/git-bug/entity"
 	"github.com/MichaelMure/git-bug/util/colors"
 )
@@ -28,6 +29,7 @@ var showBugHelp = helpBar{
 	{"←↓↑→,hjkl", "Navigation"},
 	{"o", "Toggle open/close"},
 	{"e", "Edit"},
+	{"d", "Delete"},
 	{"c", "Comment"},
 	{"t", "Change title"},
 }
@@ -196,6 +198,12 @@ func (sb *showBug) keybindings(g *gocui.Gui) error {
 		return err
 	}
 
+	// Delete
+	if err := g.SetKeybinding(showBugView, 'd', gocui.ModNone,
+		sb.del); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -221,7 +229,10 @@ func (sb *showBug) renderMain(g *gocui.Gui, mainView *gocui.View) error {
 	createTimelineItem := snap.Timeline[0].(*bug.CreateTimelineItem)
 
 	edited := ""
-	if createTimelineItem.Edited() {
+
+	if createTimelineItem.Deleted {
+		edited = " (deleted)"
+	} else if createTimelineItem.Edited() {
 		edited = " (edited)"
 	}
 
@@ -255,7 +266,9 @@ func (sb *showBug) renderMain(g *gocui.Gui, mainView *gocui.View) error {
 			var content string
 			var lines int
 
-			if op.MessageIsEmpty() {
+			if op.Deleted {
+				content, lines = text.WrapLeftPadded(deletedMessage(op.DeletedBy()), maxX-1, 4)
+			} else if op.MessageIsEmpty() {
 				content, lines = text.WrapLeftPadded(emptyMessagePlaceholder(), maxX-1, 4)
 			} else {
 				content, lines = text.WrapLeftPadded(op.Message, maxX-1, 4)
@@ -270,12 +283,16 @@ func (sb *showBug) renderMain(g *gocui.Gui, mainView *gocui.View) error {
 
 		case *bug.AddCommentTimelineItem:
 			edited := ""
-			if op.Edited() {
+			if op.Deleted {
+				edited = " (deleted)"
+			} else if op.Edited() {
 				edited = " (edited)"
 			}
 
 			var message string
-			if op.MessageIsEmpty() {
+			if op.Deleted {
+				message, _ = text.WrapLeftPadded(deletedMessage(op.DeletedBy()), maxX-1, 4)
+			} else if op.MessageIsEmpty() {
 				message, _ = text.WrapLeftPadded(emptyMessagePlaceholder(), maxX-1, 4)
 			} else {
 				message, _ = text.WrapLeftPadded(op.Message, maxX-1, 4)
@@ -381,6 +398,10 @@ func (sb *showBug) renderMain(g *gocui.Gui, mainView *gocui.View) error {
 // emptyMessagePlaceholder return a formatted placeholder for an empty message
 func emptyMessagePlaceholder() string {
 	return colors.BlackBold(colors.WhiteBg("No description provided."))
+}
+
+func deletedMessage(author identity.Interface) string {
+	return colors.BlackBold(colors.WhiteBg("Comment deleted by ", author.DisplayName()))
 }
 
 func (sb *showBug) createOpView(g *gocui.Gui, name string, x0 int, y0 int, maxX int, height int, selectable bool) (*gocui.View, error) {
@@ -668,4 +689,28 @@ func (sb *showBug) edit(g *gocui.Gui, v *gocui.View) error {
 func (sb *showBug) editLabels(g *gocui.Gui, snap *bug.Snapshot) error {
 	ui.labelSelect.SetBug(sb.cache, sb.bug)
 	return ui.activateWindow(ui.labelSelect)
+}
+
+func (sb *showBug) del(g *gocui.Gui, v *gocui.View) error {
+	if sb.selected == "" {
+		return nil
+	}
+
+	op, err := sb.bug.Snapshot().SearchTimelineItem(entity.CombinedId(sb.selected))
+	if err != nil {
+		return err
+	}
+
+	switch op := op.(type) {
+	case *bug.AddCommentTimelineItem:
+		_, err := sb.bug.DeleteComment(op.CombinedId())
+		return err
+	case *bug.CreateTimelineItem:
+		_, err := sb.bug.DeleteComment(op.CombinedId())
+		return err
+	}
+
+	ui.msgPopup.Activate(msgPopupErrorTitle, "Selected field is not deletable.")
+
+	return nil
 }

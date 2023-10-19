@@ -21,6 +21,7 @@ type CommentHistoryStep struct {
 	Author identity.Interface
 	// The new message
 	Message  string
+	Deleted  bool
 	UnixTime timestamp.Timestamp
 }
 
@@ -29,6 +30,7 @@ type CommentTimelineItem struct {
 	combinedId entity.CombinedId
 	Author     identity.Interface
 	Message    string
+	Deleted    bool
 	Files      []repository.Hash
 	CreatedAt  timestamp.Timestamp
 	LastEdit   timestamp.Timestamp
@@ -60,11 +62,13 @@ func (c *CommentTimelineItem) CombinedId() entity.CombinedId {
 // Append will append a new comment in the history and update the other values
 func (c *CommentTimelineItem) Append(comment Comment) {
 	c.Message = comment.Message
+	c.Deleted = comment.Deleted
 	c.Files = comment.Files
 	c.LastEdit = comment.unixTime
 	c.History = append(c.History, CommentHistoryStep{
 		Author:   comment.Author,
 		Message:  comment.Message,
+		Deleted:  comment.Deleted,
 		UnixTime: comment.unixTime,
 	})
 }
@@ -72,6 +76,10 @@ func (c *CommentTimelineItem) Append(comment Comment) {
 // Edited say if the comment was edited
 func (c *CommentTimelineItem) Edited() bool {
 	return len(c.History) > 1
+}
+
+func (c *CommentTimelineItem) DeletedBy() identity.Interface {
+	return c.History[len(c.History)-1].Author
 }
 
 // MessageIsEmpty return true is the message is empty or only made of spaces
