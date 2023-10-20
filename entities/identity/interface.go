@@ -1,14 +1,14 @@
 package identity
 
 import (
-	"github.com/MichaelMure/git-bug/entity"
+	bootstrap "github.com/MichaelMure/git-bug/entity/boostrap"
 	"github.com/MichaelMure/git-bug/repository"
 	"github.com/MichaelMure/git-bug/util/lamport"
 	"github.com/MichaelMure/git-bug/util/timestamp"
 )
 
 type Interface interface {
-	entity.Interface
+	bootstrap.Entity
 
 	// Name return the last version of the name
 	// Can be empty.

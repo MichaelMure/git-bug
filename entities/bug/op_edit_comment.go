@@ -15,7 +15,7 @@ import (
 )
 
 var _ Operation = &EditCommentOperation{}
-var _ dag.OperationWithFiles = &EditCommentOperation{}
+var _ entity.OperationWithFiles = &EditCommentOperation{}
 
 // EditCommentOperation will change a comment in the bug
 type EditCommentOperation struct {
@@ -96,6 +96,12 @@ func (op *EditCommentOperation) Validate() error {
 
 	if !text.Safe(op.Message) {
 		return fmt.Errorf("message is not fully printable")
+	}
+
+	for _, file := range op.Files {
+		if !file.IsValid() {
+			return fmt.Errorf("invalid file hash")
+		}
 	}
 
 	return nil

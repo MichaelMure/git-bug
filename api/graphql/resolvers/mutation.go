@@ -62,7 +62,7 @@ func (r mutationResolver) NewBug(ctx context.Context, input models.NewBugInput) 
 
 	return &models.NewBugPayload{
 		ClientMutationID: input.ClientMutationID,
-		Bug:              models.NewLoadedBug(b.Snapshot()),
+		Bug:              models.NewLoadedBug(b.Compile()),
 		Operation:        op,
 	}, nil
 }
@@ -94,7 +94,7 @@ func (r mutationResolver) AddComment(ctx context.Context, input models.AddCommen
 
 	return &models.AddCommentPayload{
 		ClientMutationID: input.ClientMutationID,
-		Bug:              models.NewLoadedBug(b.Snapshot()),
+		Bug:              models.NewLoadedBug(b.Compile()),
 		Operation:        op,
 	}, nil
 }
@@ -131,7 +131,7 @@ func (r mutationResolver) AddCommentAndClose(ctx context.Context, input models.A
 
 	return &models.AddCommentAndCloseBugPayload{
 		ClientMutationID: input.ClientMutationID,
-		Bug:              models.NewLoadedBug(b.Snapshot()),
+		Bug:              models.NewLoadedBug(b.Compile()),
 		CommentOperation: opAddComment,
 		StatusOperation:  opClose,
 	}, nil
@@ -169,7 +169,7 @@ func (r mutationResolver) AddCommentAndReopen(ctx context.Context, input models.
 
 	return &models.AddCommentAndReopenBugPayload{
 		ClientMutationID: input.ClientMutationID,
-		Bug:              models.NewLoadedBug(b.Snapshot()),
+		Bug:              models.NewLoadedBug(b.Compile()),
 		CommentOperation: opAddComment,
 		StatusOperation:  opReopen,
 	}, nil
@@ -209,7 +209,7 @@ func (r mutationResolver) EditComment(ctx context.Context, input models.EditComm
 
 	return &models.EditCommentPayload{
 		ClientMutationID: input.ClientMutationID,
-		Bug:              models.NewLoadedBug(b.Snapshot()),
+		Bug:              models.NewLoadedBug(b.Compile()),
 		Operation:        op,
 	}, nil
 }
@@ -248,7 +248,7 @@ func (r mutationResolver) ChangeLabels(ctx context.Context, input *models.Change
 
 	return &models.ChangeLabelPayload{
 		ClientMutationID: input.ClientMutationID,
-		Bug:              models.NewLoadedBug(b.Snapshot()),
+		Bug:              models.NewLoadedBug(b.Compile()),
 		Operation:        op,
 		Results:          resultsPtr,
 	}, nil
@@ -277,7 +277,7 @@ func (r mutationResolver) OpenBug(ctx context.Context, input models.OpenBugInput
 
 	return &models.OpenBugPayload{
 		ClientMutationID: input.ClientMutationID,
-		Bug:              models.NewLoadedBug(b.Snapshot()),
+		Bug:              models.NewLoadedBug(b.Compile()),
 		Operation:        op,
 	}, nil
 }
@@ -305,7 +305,7 @@ func (r mutationResolver) CloseBug(ctx context.Context, input models.CloseBugInp
 
 	return &models.CloseBugPayload{
 		ClientMutationID: input.ClientMutationID,
-		Bug:              models.NewLoadedBug(b.Snapshot()),
+		Bug:              models.NewLoadedBug(b.Compile()),
 		Operation:        op,
 	}, nil
 }
@@ -338,7 +338,7 @@ func (r mutationResolver) SetTitle(ctx context.Context, input models.SetTitleInp
 
 	return &models.SetTitlePayload{
 		ClientMutationID: input.ClientMutationID,
-		Bug:              models.NewLoadedBug(b.Snapshot()),
+		Bug:              models.NewLoadedBug(b.Compile()),
 		Operation:        op,
 	}, nil
 }

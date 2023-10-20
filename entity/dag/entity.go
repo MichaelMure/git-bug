@@ -11,6 +11,7 @@ import (
 
 	"github.com/MichaelMure/git-bug/entities/identity"
 	"github.com/MichaelMure/git-bug/entity"
+	bootstrap "github.com/MichaelMure/git-bug/entity/boostrap"
 	"github.com/MichaelMure/git-bug/repository"
 	"github.com/MichaelMure/git-bug/util/lamport"
 )
@@ -59,7 +60,7 @@ func New(definition Definition) *Entity {
 }
 
 // Read will read and decode a stored local Entity from a repository
-func Read[EntityT entity.Interface](def Definition, wrapper func(e *Entity) EntityT, repo repository.ClockedRepo, resolvers entity.Resolvers, id entity.Id) (EntityT, error) {
+func Read[EntityT entity.Bare](def Definition, wrapper func(e *Entity) EntityT, repo repository.ClockedRepo, resolvers entity.Resolvers, id entity.Id) (EntityT, error) {
 	if err := id.Validate(); err != nil {
 		return *new(EntityT), errors.Wrap(err, "invalid id")
 	}
@@ -70,7 +71,7 @@ func Read[EntityT entity.Interface](def Definition, wrapper func(e *Entity) Enti
 }
 
 // readRemote will read and decode a stored remote Entity from a repository
-func readRemote[EntityT entity.Interface](def Definition, wrapper func(e *Entity) EntityT, repo repository.ClockedRepo, resolvers entity.Resolvers, remote string, id entity.Id) (EntityT, error) {
+func readRemote[EntityT entity.Bare](def Definition, wrapper func(e *Entity) EntityT, repo repository.ClockedRepo, resolvers entity.Resolvers, remote string, id entity.Id) (EntityT, error) {
 	if err := id.Validate(); err != nil {
 		return *new(EntityT), errors.Wrap(err, "invalid id")
 	}
@@ -81,7 +82,7 @@ func readRemote[EntityT entity.Interface](def Definition, wrapper func(e *Entity
 }
 
 // read fetch from git and decode an Entity at an arbitrary git reference.
-func read[EntityT entity.Interface](def Definition, wrapper func(e *Entity) EntityT, repo repository.ClockedRepo, resolvers entity.Resolvers, ref string) (EntityT, error) {
+func read[EntityT entity.Bare](def Definition, wrapper func(e *Entity) EntityT, repo repository.ClockedRepo, resolvers entity.Resolvers, ref string) (EntityT, error) {
 	rootHash, err := repo.ResolveRef(ref)
 	if err == repository.ErrNotFound {
 		return *new(EntityT), entity.NewErrNotFound(def.Typename)
@@ -300,8 +301,8 @@ func readClockNoCheck(def Definition, repo repository.ClockedRepo, ref string) e
 }
 
 // ReadAll read and parse all local Entity
-func ReadAll[EntityT entity.Interface](def Definition, wrapper func(e *Entity) EntityT, repo repository.ClockedRepo, resolvers entity.Resolvers) <-chan entity.StreamedEntity[EntityT] {
-	out := make(chan entity.StreamedEntity[EntityT])
+func ReadAll[EntityT entity.Bare](def Definition, wrapper func(e *Entity) EntityT, repo repository.ClockedRepo, resolvers entity.Resolvers) <-chan bootstrap.StreamedEntity[EntityT] {
+	out := make(chan bootstrap.StreamedEntity[EntityT])
 
 	go func() {
 		defer close(out)
@@ -310,7 +311,7 @@ func ReadAll[EntityT entity.Interface](def Definition, wrapper func(e *Entity) E
 
 		refs, err := repo.ListRefs(refPrefix)
 		if err != nil {
-			out <- entity.StreamedEntity[EntityT]{Err: err}
+			out <- bootstrap.StreamedEntity[EntityT]{Err: err}
 			return
 		}
 
@@ -321,11 +322,11 @@ func ReadAll[EntityT entity.Interface](def Definition, wrapper func(e *Entity) E
 			e, err := read[EntityT](def, wrapper, repo, resolvers, ref)
 
 			if err != nil {
-				out <- entity.StreamedEntity[EntityT]{Err: err}
+				out <- bootstrap.StreamedEntity[EntityT]{Err: err}
 				return
 			}
 
-			out <- entity.StreamedEntity[EntityT]{
+			out <- bootstrap.StreamedEntity[EntityT]{
 				Entity:        e,
 				CurrentEntity: current,
 				TotalEntities: total,

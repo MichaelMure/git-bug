@@ -178,8 +178,8 @@ func TestGithubImporter(t *testing.T) {
 			b, err := backend.Bugs().ResolveBugCreateMetadata(metaKeyGithubUrl, tt.url)
 			require.NoError(t, err)
 
-			ops := b.Snapshot().Operations
-			require.Len(t, tt.bug.Operations, len(b.Snapshot().Operations))
+			ops := b.Compile().Operations
+			require.Len(t, tt.bug.Operations, len(b.Compile().Operations))
 
 			for i, op := range tt.bug.Operations {
 				require.IsType(t, ops[i], op)

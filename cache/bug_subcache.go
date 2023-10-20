@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/MichaelMure/git-bug/entities/bug"
-	"github.com/MichaelMure/git-bug/entities/identity"
 	"github.com/MichaelMure/git-bug/entity"
 	"github.com/MichaelMure/git-bug/query"
 	"github.com/MichaelMure/git-bug/repository"
@@ -25,7 +24,7 @@ func NewRepoCacheBug(repo repository.ClockedRepo,
 	}
 
 	makeIndexData := func(b *BugCache) []string {
-		snap := b.Snapshot()
+		snap := b.Compile()
 		var res []string
 		for _, comment := range snap.Comments {
 			res = append(res, comment.Message)
@@ -90,7 +89,7 @@ func (c *RepoCacheBug) ResolveComment(prefix string) (*BugCache, entity.Combined
 			return nil, entity.UnsetCombinedId, err
 		}
 
-		for _, comment := range b.Snapshot().Comments {
+		for _, comment := range b.Compile().Comments {
 			if comment.CombinedId().HasPrefix(prefix) {
 				matchingBugIds = append(matchingBugIds, bugId)
 				matchingBug = b
@@ -235,7 +234,7 @@ func (c *RepoCacheBug) NewWithFiles(title string, message string, files []reposi
 // NewRaw create a new bug with attached files for the message, as
 // well as metadata for the Create operation.
 // The new bug is written in the repository (commit)
-func (c *RepoCacheBug) NewRaw(author identity.Interface, unixTime int64, title string, message string, files []repository.Hash, metadata map[string]string) (*BugCache, *bug.CreateOperation, error) {
+func (c *RepoCacheBug) NewRaw(author entity.Interface, unixTime int64, title string, message string, files []repository.Hash, metadata map[string]string) (*BugCache, *bug.CreateOperation, error) {
 	b, op, err := bug.Create(author, unixTime, title, message, files, metadata)
 	if err != nil {
 		return nil, nil, err

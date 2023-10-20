@@ -7,12 +7,13 @@ import (
 	"github.com/MichaelMure/git-bug/entities/common"
 	"github.com/MichaelMure/git-bug/entities/identity"
 	"github.com/MichaelMure/git-bug/entity"
+	bootstrap "github.com/MichaelMure/git-bug/entity/boostrap"
 	"github.com/MichaelMure/git-bug/entity/dag"
 	"github.com/MichaelMure/git-bug/repository"
 )
 
 var _ Interface = &Bug{}
-var _ entity.Interface = &Bug{}
+var _ entity.Interface[Operation, *Snapshot] = &Bug{}
 
 // 1: original format
 // 2: no more legacy identities
@@ -33,7 +34,7 @@ var def = dag.Definition{
 var ClockLoader = dag.ClockLoader(def)
 
 type Interface interface {
-	dag.Interface[*Snapshot, Operation]
+	entity.Interface[Operation, *Snapshot]
 }
 
 // Bug holds the data of a bug thread, organized in a way close to
@@ -69,12 +70,12 @@ func ReadWithResolver(repo repository.ClockedRepo, resolvers entity.Resolvers, i
 }
 
 // ReadAll read and parse all local bugs
-func ReadAll(repo repository.ClockedRepo) <-chan entity.StreamedEntity[*Bug] {
+func ReadAll(repo repository.ClockedRepo) <-chan bootstrap.StreamedEntity[*Bug] {
 	return dag.ReadAll(def, wrapper, repo, simpleResolvers(repo))
 }
 
 // ReadAllWithResolver read and parse all local bugs
-func ReadAllWithResolver(repo repository.ClockedRepo, resolvers entity.Resolvers) <-chan entity.StreamedEntity[*Bug] {
+func ReadAllWithResolver(repo repository.ClockedRepo, resolvers entity.Resolvers) <-chan bootstrap.StreamedEntity[*Bug] {
 	return dag.ReadAll(def, wrapper, repo, resolvers)
 }
 

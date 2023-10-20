@@ -29,7 +29,7 @@ func runBugStatus(env *execenv.Env, args []string) error {
 		return err
 	}
 
-	snap := b.Snapshot()
+	snap := b.Compile()
 
 	env.Out.Println(snap.Status)
 

@@ -9,7 +9,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/MichaelMure/git-bug/entities/identity"
 	"github.com/MichaelMure/git-bug/entity"
 	"github.com/MichaelMure/git-bug/repository"
 )
@@ -35,7 +34,7 @@ type Actions[EntityT entity.Interface] struct {
 	ReadAllWithResolver func(repo repository.ClockedRepo, resolvers entity.Resolvers) <-chan entity.StreamedEntity[EntityT]
 	Remove              func(repo repository.ClockedRepo, id entity.Id) error
 	RemoveAll           func(repo repository.ClockedRepo) error
-	MergeAll            func(repo repository.ClockedRepo, resolvers entity.Resolvers, remote string, mergeAuthor identity.Interface) <-chan entity.MergeResult
+	MergeAll            func(repo repository.ClockedRepo, resolvers entity.Resolvers, remote string, mergeAuthor entity.Interface) <-chan entity.MergeResult
 }
 
 var _ cacheMgmt = &SubCache[entity.Interface, Excerpt, CacheEntity]{}
@@ -597,7 +596,6 @@ func (sc *SubCache[EntityT, ExcerptT, CacheT]) entityUpdated(id entity.Id) error
 		return errors.New("entity missing from cache")
 	}
 	sc.lru.Get(id)
-	// sc.excerpts[id] = bug2.NewBugExcerpt(b.bug, b.Snapshot())
 	sc.excerpts[id] = sc.makeExcerpt(e)
 	sc.mu.Unlock()
 

@@ -12,7 +12,8 @@ import (
 )
 
 var _ Operation = &AddCommentOperation{}
-var _ dag.OperationWithFiles = &AddCommentOperation{}
+var _ dag.Operation = &AddCommentOperation{}
+var _ entity.OperationWithFiles = &AddCommentOperation{}
 
 // AddCommentOperation will add a new comment in the bug
 type AddCommentOperation struct {
@@ -61,6 +62,12 @@ func (op *AddCommentOperation) Validate() error {
 
 	if !text.Safe(op.Message) {
 		return fmt.Errorf("message is not fully printable")
+	}
+
+	for _, file := range op.Files {
+		if !file.IsValid() {
+			return fmt.Errorf("invalid file hash")
+		}
 	}
 
 	return nil

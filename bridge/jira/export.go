@@ -161,7 +161,7 @@ func (je *jiraExporter) ExportAll(ctx context.Context, repo *cache.RepoCache, si
 				return
 
 			default:
-				snapshot := b.Snapshot()
+				snapshot := b.Compile()
 
 				// ignore issues whose last modification date is before the query date
 				// TODO: compare the Lamport time instead of using the unix time
@@ -189,7 +189,7 @@ func (je *jiraExporter) ExportAll(ctx context.Context, repo *cache.RepoCache, si
 
 // exportBug publish bugs and related events
 func (je *jiraExporter) exportBug(ctx context.Context, b *cache.BugCache, out chan<- core.ExportResult) error {
-	snapshot := b.Snapshot()
+	snapshot := b.Compile()
 
 	var bugJiraID string
 

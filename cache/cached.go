@@ -9,6 +9,7 @@ import (
 	"github.com/MichaelMure/git-bug/util/lamport"
 )
 
+var _ dag.Interface[dag.Snapshot, dag.Operation] = &CachedEntityBase[dag.Snapshot, dag.Operation]{}
 var _ CacheEntity = &CachedEntityBase[dag.Snapshot, dag.Operation]{}
 
 // CachedEntityBase provide the base function of an entity managed by the cache.
@@ -25,7 +26,7 @@ func (e *CachedEntityBase[SnapT, OpT]) Id() entity.Id {
 	return e.entity.Id()
 }
 
-func (e *CachedEntityBase[SnapT, OpT]) Snapshot() SnapT {
+func (e *CachedEntityBase[SnapT, OpT]) Compile() SnapT {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	return e.entity.Compile()
@@ -64,6 +65,18 @@ func (e *CachedEntityBase[SnapT, OpT]) Validate() error {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	return e.entity.Validate()
+}
+
+func (e *CachedEntityBase[SnapT, OpT]) Append(op OpT) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.entity.Append(op)
+}
+
+func (e *CachedEntityBase[SnapT, OpT]) Operations() []OpT {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return e.entity.Operations()
 }
 
 func (e *CachedEntityBase[SnapT, OpT]) Commit() error {

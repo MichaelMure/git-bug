@@ -296,7 +296,7 @@ func setTitleWithEditor(bug *cache.BugCache) error {
 	ui.g.Close()
 	ui.g = nil
 
-	snap := bug.Snapshot()
+	snap := bug.Compile()
 
 	title, err := buginput.BugTitleEditorInput(ui.cache, snap.Title)
 

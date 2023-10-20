@@ -214,7 +214,7 @@ func (sb *showBug) renderMain(g *gocui.Gui, mainView *gocui.View) error {
 
 	y0 -= sb.scroll
 
-	snap := sb.bug.Snapshot()
+	snap := sb.bug.Compile()
 
 	sb.mainSelectableView = nil
 
@@ -425,7 +425,7 @@ func (sb *showBug) renderSidebar(g *gocui.Gui, sideView *gocui.View) error {
 	x0, y0, _, _, _ := g.ViewPosition(sideView.Name())
 	maxX += x0
 
-	snap := sb.bug.Snapshot()
+	snap := sb.bug.Compile()
 
 	sb.sideSelectableView = nil
 
@@ -624,7 +624,7 @@ func (sb *showBug) setTitle(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (sb *showBug) toggleOpenClose(g *gocui.Gui, v *gocui.View) error {
-	switch sb.bug.Snapshot().Status {
+	switch sb.bug.Compile().Status {
 	case common.OpenStatus:
 		_, err := sb.bug.Close()
 		return err
@@ -637,7 +637,7 @@ func (sb *showBug) toggleOpenClose(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (sb *showBug) edit(g *gocui.Gui, v *gocui.View) error {
-	snap := sb.bug.Snapshot()
+	snap := sb.bug.Compile()
 
 	if sb.isOnSide {
 		return sb.editLabels(g, snap)

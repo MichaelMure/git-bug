@@ -52,7 +52,7 @@ func runBugShow(env *execenv.Env, opts bugShowOptions, args []string) error {
 		return err
 	}
 
-	snap := b.Snapshot()
+	snap := b.Compile()
 
 	if len(snap.Comments) == 0 {
 		return errors.New("invalid bug: no comment")

@@ -1,6 +1,9 @@
-package entity
+package bootstrap
 
-type StreamedEntity[EntityT Interface] struct {
+// TODO: type alias not possible on generics for now
+// https://github.com/golang/go/issues/46477
+
+type StreamedEntity[EntityT Entity] struct {
 	Err    error
 	Entity EntityT
 

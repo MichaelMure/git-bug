@@ -124,7 +124,7 @@ func (ji *jiraImporter) ImportAll(ctx context.Context, repo *cache.RepoCache, si
 				out <- core.NewImportError(commentIter.Err, "")
 			}
 
-			snapshot := b.Snapshot()
+			snapshot := b.Compile()
 			opIdx := 0
 
 			var changelogIter *ChangeLogIterator
@@ -466,7 +466,7 @@ func (ji *jiraImporter) ensureChange(repo *cache.RepoCache, b *cache.BugCache, e
 			// title but it's actually the body
 			opr, isRightType := potentialOp.(*bug.EditCommentOperation)
 			if isRightType &&
-				opr.Target == b.Snapshot().Operations[0].Id() &&
+				opr.Target == b.Compile().Operations[0].Id() &&
 				opr.Message == item.ToString {
 				_, err := b.SetMetadata(opr.Id(), map[string]string{
 					metaKeyJiraDerivedId: entry.ID,
