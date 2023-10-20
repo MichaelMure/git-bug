@@ -31,11 +31,11 @@ require (
 	github.com/vbauerster/mpb/v8 v8.5.2
 	github.com/vektah/gqlparser/v2 v2.5.8
 	github.com/xanzy/go-gitlab v0.90.0
-	golang.org/x/crypto v0.12.0
+	golang.org/x/crypto v0.14.0
 	golang.org/x/oauth2 v0.11.0
 	golang.org/x/sync v0.3.0
-	golang.org/x/sys v0.11.0
-	golang.org/x/text v0.12.0
+	golang.org/x/sys v0.13.0
+	golang.org/x/text v0.13.0
 )
 
 require (
@@ -109,8 +109,8 @@ require (
 	github.com/zclconf/go-cty v1.8.4 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
 	golang.org/x/mod v0.10.0 // indirect
-	golang.org/x/net v0.14.0 // indirect
-	golang.org/x/term v0.11.0
+	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/term v0.13.0
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.9.3 // indirect
 	golang.org/x/vuln v1.0.0
