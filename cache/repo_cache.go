@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/MichaelMure/git-bug/entities/board"
+	"github.com/MichaelMure/git-bug/entities/bug"
+	"github.com/MichaelMure/git-bug/entities/identity"
 	"github.com/MichaelMure/git-bug/entity"
 	"github.com/MichaelMure/git-bug/repository"
 	"github.com/MichaelMure/git-bug/util/multierr"
@@ -62,6 +65,7 @@ type RepoCache struct {
 	// resolvers for all known entities and excerpts
 	resolvers entity.Resolvers
 
+	boards     *RepoCacheBoard
 	bugs       *RepoCacheBug
 	identities *RepoCacheIdentity
 
@@ -94,11 +98,21 @@ func NewNamedRepoCache(r repository.ClockedRepo, name string) (*RepoCache, chan 
 	c.bugs = NewRepoCacheBug(r, c.getResolvers, c.GetUserIdentity)
 	c.subcaches = append(c.subcaches, c.bugs)
 
+	c.boards = NewRepoCacheBoard(r, c.getResolvers, c.GetUserIdentity)
+	c.subcaches = append(c.subcaches, c.boards)
+
 	c.resolvers = entity.Resolvers{
-		&IdentityCache{}:   entity.ResolverFunc[*IdentityCache](c.identities.Resolve),
-		&IdentityExcerpt{}: entity.ResolverFunc[*IdentityExcerpt](c.identities.ResolveExcerpt),
-		&BugCache{}:        entity.ResolverFunc[*BugCache](c.bugs.Resolve),
-		&BugExcerpt{}:      entity.ResolverFunc[*BugExcerpt](c.bugs.ResolveExcerpt),
+		identity.Interface(nil): entity.ResolverFunc[*IdentityCache](c.identities.Resolve),
+		&IdentityCache{}:        entity.ResolverFunc[*IdentityCache](c.identities.Resolve),
+		&IdentityExcerpt{}:      entity.ResolverFunc[*IdentityExcerpt](c.identities.ResolveExcerpt),
+		bug.Interface(nil):      entity.ResolverFunc[*BugCache](c.bugs.Resolve),
+		&bug.Bug{}:              entity.ResolverFunc[*BugCache](c.bugs.Resolve),
+		&BugCache{}:             entity.ResolverFunc[*BugCache](c.bugs.Resolve),
+		&BugExcerpt{}:           entity.ResolverFunc[*BugExcerpt](c.bugs.ResolveExcerpt),
+		board.Interface(nil):    entity.ResolverFunc[*BoardCache](c.boards.Resolve),
+		&bug.Bug{}:              entity.ResolverFunc[*BoardCache](c.boards.Resolve),
+		&BoardCache{}:           entity.ResolverFunc[*BoardCache](c.boards.Resolve),
+		&BoardExcerpt{}:         entity.ResolverFunc[*BoardExcerpt](c.boards.ResolveExcerpt),
 	}
 
 	// small buffer so that below functions can emit an event without blocking
@@ -135,6 +149,11 @@ func NewRepoCacheNoEvents(r repository.ClockedRepo) (*RepoCache, error) {
 		}
 	}
 	return cache, nil
+}
+
+// Boards gives access to the Board entities
+func (c *RepoCache) Boards() *RepoCacheBoard {
+	return c.boards
 }
 
 // Bugs gives access to the Bug entities

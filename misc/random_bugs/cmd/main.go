@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/MichaelMure/git-bug/entities/board"
 	"github.com/MichaelMure/git-bug/entities/bug"
 	rb "github.com/MichaelMure/git-bug/misc/random_bugs"
 	"github.com/MichaelMure/git-bug/repository"
@@ -20,6 +21,7 @@ func main() {
 
 	loaders := []repository.ClockLoader{
 		bug.ClockLoader,
+		board.ClockLoader,
 	}
 
 	repo, err := repository.OpenGoGitRepo(dir, gitBugNamespace, loaders)

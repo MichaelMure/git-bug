@@ -1,0 +1,47 @@
+.nh
+.TH "GIT-BUG" "1" "Apr 2019" "Generated from git-bug's source code" ""
+
+.SH NAME
+.PP
+git-bug-board-add-draft - Add a draft item to a board
+
+
+.SH SYNOPSIS
+.PP
+\fBgit-bug board add-draft [BOARD_ID] [flags]\fP
+
+
+.SH DESCRIPTION
+.PP
+Add a draft item to a board
+
+
+.SH OPTIONS
+.PP
+\fB-t\fP, \fB--title\fP=""
+	Provide the title to describe the draft item
+
+.PP
+\fB-m\fP, \fB--message\fP=""
+	Provide the message of the draft item
+
+.PP
+\fB-F\fP, \fB--file\fP=""
+	Take the message from the given file. Use - to read the message from the standard input
+
+.PP
+\fB-c\fP, \fB--column\fP="1"
+	The column to add to. Either a column Id or prefix, or the column number starting from 1.
+
+.PP
+\fB--non-interactive\fP[=false]
+	Do not ask for user input
+
+.PP
+\fB-h\fP, \fB--help\fP[=false]
+	help for add-draft
+
+
+.SH SEE ALSO
+.PP
+\fBgit-bug-board(1)\fP

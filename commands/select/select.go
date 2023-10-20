@@ -38,10 +38,10 @@ type Resolver[CacheT cache.CacheEntity] interface {
 // line. If it fails, it falls back to the select mechanism.
 //
 // Returns:
-//   - the entity if any
-//   - the new list of command line arguments with the entity prefix removed if it
-//     has been used
-//   - an error if the process failed
+//
+// Contrary to golang convention, the list of args returned is still correct even in
+// case of error, which allows to keep going and decide to handle the failure case more
+// naturally.
 func Resolve[CacheT cache.CacheEntity](repo *cache.RepoCache,
 	typename string, namespace string, resolver Resolver[CacheT],
 	args []string) (CacheT, []string, error) {
@@ -54,7 +54,7 @@ func Resolve[CacheT cache.CacheEntity](repo *cache.RepoCache,
 		}
 
 		if !entity.IsErrNotFound(err) {
-			return *new(CacheT), nil, err
+			return *new(CacheT), args, err
 		}
 	}
 
@@ -67,14 +67,14 @@ func Resolve[CacheT cache.CacheEntity](repo *cache.RepoCache,
 		// we clear the selected bug
 		err = Clear(repo, namespace)
 		if err != nil {
-			return *new(CacheT), nil, err
+			return *new(CacheT), args, err
 		}
-		return *new(CacheT), nil, NewErrNoValidId(typename)
+		return *new(CacheT), args, NewErrNoValidId(typename)
 	}
 
 	// another error when reading the entity
 	if err != nil {
-		return *new(CacheT), nil, err
+		return *new(CacheT), args, err
 	}
 
 	// entity is successfully retrieved
@@ -83,7 +83,7 @@ func Resolve[CacheT cache.CacheEntity](repo *cache.RepoCache,
 	}
 
 	// no selected bug and no valid first argument
-	return *new(CacheT), nil, NewErrNoValidId(typename)
+	return *new(CacheT), args, NewErrNoValidId(typename)
 }
 
 func selectFileName(namespace string) string {

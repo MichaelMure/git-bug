@@ -24,8 +24,7 @@ type Resolvers map[Resolved]Resolver
 func Resolve[T Resolved](rs Resolvers, id Id) (T, error) {
 	var zero T
 	for t, resolver := range rs {
-		switch t.(type) {
-		case T:
+		if _, ok := t.(T); ok {
 			val, err := resolver.(Resolver).Resolve(id)
 			if err != nil {
 				return zero, err
