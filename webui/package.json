@@ -15,7 +15,7 @@
     "@types/react": "^17.0.50",
     "@types/react-dom": "^17.0.17",
     "clsx": "^1.2.1",
-    "graphql": "^16.6.0",
+    "graphql": "^16.8.1",
     "moment": "^2.29.4",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
