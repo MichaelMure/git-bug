@@ -88,7 +88,7 @@ Or from the ports collection
 <details><summary>Compile from git (unstable)</summary>
 
 ```shell
-git clone git@github.com:MichaelMure/git-bug.git
+git clone https://github.com/MichaelMure/git-bug.git
 make install
 ```
 
