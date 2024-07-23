@@ -267,6 +267,22 @@ Or maybe you want to [make your own distributed data-structure in git](entity/da
 
 See also all the [docs](doc).
 
+### git-bug developer documentation
+`git-bug` **command line documentation** (using `--help`) and also markdown documentation for its command line interface which you can view using a web browser (in [./doc/md](./doc/md)).
+
+The following refers to **developer documentation** for `git-bug` packages which you can view in a web browser, showing functions, types etc. for each package.
+
+To view developer documentation:
+
+- Install `godoc` using `go get` / `go install`. Linux users may install directly from their package repositories but this may not be as up-to-date (e.g. `sudo apt install godoc`).
+
+In the repo you wish to browse, run the following but be patient as first time it takes a while to generate the docs and doesn't show any progress in the terminal.
+```bash
+cd ~/src/go/src/github.com/happybeing/git-bug # local git-bug repo
+godoc -http=":6060"
+```
+Then visit `http://localhost:6060` or to go directly to this module visit `http://localhost:6060/pkg/github.com/MichaelMure/git-bug/`
+
 ## Misc
 
 - [Bash, Zsh, fish, powershell completion](misc/completion)
