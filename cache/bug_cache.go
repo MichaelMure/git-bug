@@ -199,6 +199,35 @@ func (c *BugCache) EditCommentRaw(author identity.Interface, unixTime int64, tar
 	return op, c.notifyUpdated()
 }
 
+func (c *BugCache) DeleteComment(target entity.CombinedId) (*bug.DeleteCommentOperation, error) {
+	author, err := c.repoCache.GetUserIdentity()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.DeleteCommentRaw(author, time.Now().Unix(), target, nil)
+}
+
+func (c *BugCache) DeleteCommentRaw(author *IdentityCache, unixTime int64, target entity.CombinedId, metadata map[string]string) (*bug.DeleteCommentOperation, error) {
+	comment, err := c.Snapshot().SearchComment(target)
+	if err != nil {
+		return nil, err
+	}
+
+	c.mu.Lock()
+	cid, op, err := bug.DeleteComment(c.bug, author.Identity, unixTime, comment.TargetId(), metadata)
+	c.mu.Unlock()
+	if err != nil {
+		return nil, err
+	}
+
+	if cid != target {
+		panic("EditComment returned unexpected comment id")
+	}
+
+	return op, c.notifyUpdated()
+}
+
 func (c *BugCache) SetMetadata(target entity.Id, newMetadata map[string]string) (*dag.SetMetadataOperation[*bug.Snapshot], error) {
 	author, err := c.getUserIdentity()
 	if err != nil {

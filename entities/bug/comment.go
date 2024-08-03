@@ -20,6 +20,7 @@ type Comment struct {
 
 	Author  identity.Interface
 	Message string
+	Deleted bool
 	Files   []repository.Hash
 
 	// Creation time of the comment.
