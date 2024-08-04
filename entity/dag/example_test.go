@@ -66,7 +66,7 @@ type Operation interface {
 }
 
 const (
-	_ dag.OperationType = iota
+	_ entity.OperationType = iota
 	SetSignatureRequiredOp
 	AddAdministratorOp
 	RemoveAdministratorOp
@@ -220,7 +220,7 @@ var def = dag.Definition{
 // concrete Operations. If needed, we can use the resolver to connect to other entities.
 func operationUnmarshaler(raw json.RawMessage, resolvers entity.Resolvers) (dag.Operation, error) {
 	var t struct {
-		OperationType dag.OperationType `json:"type"`
+		OperationType entity.OperationType `json:"type"`
 	}
 
 	if err := json.Unmarshal(raw, &t); err != nil {

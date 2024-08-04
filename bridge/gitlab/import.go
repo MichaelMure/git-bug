@@ -198,7 +198,7 @@ func (gi *gitlabImporter) ensureIssueEvent(repo *cache.RepoCache, b *cache.BugCa
 		gi.out <- core.NewImportStatusChange(b.Id(), op.Id())
 
 	case EventDescriptionChanged:
-		firstComment := b.Snapshot().Comments[0]
+		firstComment := b.Compile().Comments[0]
 		// since gitlab doesn't provide the issue history
 		// we should check for "changed the description" notes and compare issue texts
 		// TODO: Check only one time and ignore next 'description change' within one issue
@@ -247,7 +247,7 @@ func (gi *gitlabImporter) ensureIssueEvent(repo *cache.RepoCache, b *cache.BugCa
 		// if comment was already exported
 
 		// search for last comment update
-		comment, err := b.Snapshot().SearchCommentByOpId(id)
+		comment, err := b.Compile().SearchCommentByOpId(id)
 		if err != nil {
 			return err
 		}

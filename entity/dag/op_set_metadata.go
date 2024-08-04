@@ -11,7 +11,7 @@ import (
 )
 
 var _ Operation = &SetMetadataOperation[Snapshot]{}
-var _ OperationDoesntChangeSnapshot = &SetMetadataOperation[Snapshot]{}
+var _ entity.OperationDoesntChangeSnapshot = &SetMetadataOperation[Snapshot]{}
 
 type SetMetadataOperation[SnapT Snapshot] struct {
 	OpBase
@@ -19,7 +19,7 @@ type SetMetadataOperation[SnapT Snapshot] struct {
 	NewMetadata map[string]string `json:"new_metadata"`
 }
 
-func NewSetMetadataOp[SnapT Snapshot](opType OperationType, author identity.Interface, unixTime int64, target entity.Id, newMetadata map[string]string) *SetMetadataOperation[SnapT] {
+func NewSetMetadataOp[SnapT Snapshot](opType entity.OperationType, author identity.Interface, unixTime int64, target entity.Id, newMetadata map[string]string) *SetMetadataOperation[SnapT] {
 	return &SetMetadataOperation[SnapT]{
 		OpBase:      NewOpBase(opType, author, unixTime),
 		Target:      target,

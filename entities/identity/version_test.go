@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/MichaelMure/git-bug/entity"
+	bootstrap "github.com/MichaelMure/git-bug/entity/boostrap"
 	"github.com/MichaelMure/git-bug/repository"
 	"github.com/MichaelMure/git-bug/util/lamport"
 )
@@ -44,7 +44,7 @@ func TestVersionJSON(t *testing.T) {
 	before.SetMetadata("key2", "value2")
 
 	expected := &version{
-		id:        entity.UnsetId,
+		id:        bootstrap.UnsetId,
 		name:      "name",
 		email:     "email",
 		login:     "login",

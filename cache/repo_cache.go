@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/MichaelMure/git-bug/entities/bug"
 	"github.com/MichaelMure/git-bug/entity"
 	"github.com/MichaelMure/git-bug/repository"
 	"github.com/MichaelMure/git-bug/util/multierr"
@@ -97,6 +98,8 @@ func NewNamedRepoCache(r repository.ClockedRepo, name string) (*RepoCache, chan 
 	c.resolvers = entity.Resolvers{
 		&IdentityCache{}:   entity.ResolverFunc[*IdentityCache](c.identities.Resolve),
 		&IdentityExcerpt{}: entity.ResolverFunc[*IdentityExcerpt](c.identities.ResolveExcerpt),
+
+		bug.Interface(nil): entity.ResolverFunc[*BugCache](c.bugs.Resolve),
 		&BugCache{}:        entity.ResolverFunc[*BugCache](c.bugs.Resolve),
 		&BugExcerpt{}:      entity.ResolverFunc[*BugExcerpt](c.bugs.ResolveExcerpt),
 	}

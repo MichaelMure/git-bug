@@ -43,7 +43,7 @@ func runBugTitleEdit(env *execenv.Env, opts bugTitleEditOptions, args []string) 
 		return err
 	}
 
-	snap := b.Snapshot()
+	snap := b.Compile()
 
 	if opts.title == "" {
 		if opts.nonInteractive {

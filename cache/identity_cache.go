@@ -8,7 +8,7 @@ import (
 	"github.com/MichaelMure/git-bug/repository"
 )
 
-var _ identity.Interface = &IdentityCache{}
+var _ entity.Interface = &IdentityCache{}
 var _ CacheEntity = &IdentityCache{}
 
 // IdentityCache is a wrapper around an Identity for caching.

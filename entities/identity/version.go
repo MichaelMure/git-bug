@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/MichaelMure/git-bug/entity"
+	bootstrap "github.com/MichaelMure/git-bug/entity/boostrap"
 	"github.com/MichaelMure/git-bug/repository"
 	"github.com/MichaelMure/git-bug/util/lamport"
 	"github.com/MichaelMure/git-bug/util/text"
@@ -46,7 +46,7 @@ type version struct {
 	metadata map[string]string
 
 	// Not serialized. Store the version's id in memory.
-	id entity.Id
+	id bootstrap.Id
 	// Not serialized
 	commitHash repository.Hash
 }
@@ -63,7 +63,7 @@ func newVersion(repo repository.RepoClock, name string, email string, login stri
 	}
 
 	return &version{
-		id:        entity.UnsetId,
+		id:        bootstrap.UnsetId,
 		name:      name,
 		email:     email,
 		login:     login,
@@ -91,12 +91,12 @@ type versionJSON struct {
 }
 
 // Id return the identifier of the version
-func (v *version) Id() entity.Id {
+func (v *version) Id() bootstrap.Id {
 	if v.id == "" {
 		// something went really wrong
 		panic("version's id not set")
 	}
-	if v.id == entity.UnsetId {
+	if v.id == bootstrap.UnsetId {
 		// This means we are trying to get the version's Id *before* it has been stored.
 		// As the Id is computed based on the actual bytes written on the disk, we are going to predict
 		// those and then get the Id. This is safe as it will be the exact same code writing on disk later.
@@ -104,7 +104,7 @@ func (v *version) Id() entity.Id {
 		if err != nil {
 			panic(err)
 		}
-		v.id = entity.DeriveId(data)
+		v.id = bootstrap.DeriveId(data)
 	}
 	return v.id
 }
@@ -116,7 +116,7 @@ func (v *version) Clone() *version {
 
 	// reset some fields
 	clone.commitHash = ""
-	clone.id = entity.UnsetId
+	clone.id = bootstrap.UnsetId
 
 	clone.times = make(map[string]lamport.Time)
 	for name, t := range v.times {
@@ -159,10 +159,10 @@ func (v *version) UnmarshalJSON(data []byte) error {
 	}
 
 	if aux.FormatVersion != formatVersion {
-		return entity.NewErrInvalidFormat(aux.FormatVersion, formatVersion)
+		return bootstrap.NewErrInvalidFormat(aux.FormatVersion, formatVersion)
 	}
 
-	v.id = entity.DeriveId(data)
+	v.id = bootstrap.DeriveId(data)
 	v.times = aux.Times
 	v.unixTime = aux.UnixTime
 	v.name = aux.Name
@@ -237,7 +237,7 @@ func (v *version) Write(repo repository.Repo) (repository.Hash, error) {
 	}
 
 	// make sure we set the Id when writing in the repo
-	v.id = entity.DeriveId(data)
+	v.id = bootstrap.DeriveId(data)
 
 	return hash, nil
 }

@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/MichaelMure/git-bug/entity"
+	bootstrap "github.com/MichaelMure/git-bug/entity/boostrap"
 	"github.com/MichaelMure/git-bug/repository"
 	"github.com/MichaelMure/git-bug/util/lamport"
 	"github.com/MichaelMure/git-bug/util/timestamp"
@@ -29,7 +29,7 @@ var ErrNoIdentitySet = errors.New("No identity is set.\n" +
 var ErrMultipleIdentitiesSet = errors.New("multiple user identities set")
 
 var _ Interface = &Identity{}
-var _ entity.Interface = &Identity{}
+var _ bootstrap.Entity = &Identity{}
 
 type Identity struct {
 	// all the successive version of the identity
@@ -87,7 +87,7 @@ func (i *Identity) UnmarshalJSON(data []byte) error {
 }
 
 // ReadLocal load a local Identity from the identities data available in git
-func ReadLocal(repo repository.Repo, id entity.Id) (*Identity, error) {
+func ReadLocal(repo repository.Repo, id bootstrap.Id) (*Identity, error) {
 	ref := fmt.Sprintf("%s%s", identityRefPattern, id)
 	return read(repo, ref)
 }
@@ -100,7 +100,7 @@ func ReadRemote(repo repository.Repo, remote string, id string) (*Identity, erro
 
 // read will load and parse an identity from git
 func read(repo repository.Repo, ref string) (*Identity, error) {
-	id := entity.RefToId(ref)
+	id := bootstrap.RefToId(ref)
 
 	if err := id.Validate(); err != nil {
 		return nil, errors.Wrap(err, "invalid ref")
@@ -108,7 +108,7 @@ func read(repo repository.Repo, ref string) (*Identity, error) {
 
 	hashes, err := repo.ListCommits(ref)
 	if err != nil {
-		return nil, entity.NewErrNotFound(Typename)
+		return nil, bootstrap.NewErrNotFound(Typename)
 	}
 	if len(hashes) == 0 {
 		return nil, fmt.Errorf("empty identity")
@@ -155,36 +155,36 @@ func read(repo repository.Repo, ref string) (*Identity, error) {
 }
 
 // ListLocalIds list all the available local identity ids
-func ListLocalIds(repo repository.Repo) ([]entity.Id, error) {
+func ListLocalIds(repo repository.Repo) ([]bootstrap.Id, error) {
 	refs, err := repo.ListRefs(identityRefPattern)
 	if err != nil {
 		return nil, err
 	}
 
-	return entity.RefsToIds(refs), nil
+	return bootstrap.RefsToIds(refs), nil
 }
 
 // ReadAllLocal read and parse all local Identity
-func ReadAllLocal(repo repository.ClockedRepo) <-chan entity.StreamedEntity[*Identity] {
+func ReadAllLocal(repo repository.ClockedRepo) <-chan bootstrap.StreamedEntity[*Identity] {
 	return readAll(repo, identityRefPattern)
 }
 
 // ReadAllRemote read and parse all remote Identity for a given remote
-func ReadAllRemote(repo repository.ClockedRepo, remote string) <-chan entity.StreamedEntity[*Identity] {
+func ReadAllRemote(repo repository.ClockedRepo, remote string) <-chan bootstrap.StreamedEntity[*Identity] {
 	refPrefix := fmt.Sprintf(identityRemoteRefPattern, remote)
 	return readAll(repo, refPrefix)
 }
 
 // readAll read and parse all available bug with a given ref prefix
-func readAll(repo repository.ClockedRepo, refPrefix string) <-chan entity.StreamedEntity[*Identity] {
-	out := make(chan entity.StreamedEntity[*Identity])
+func readAll(repo repository.ClockedRepo, refPrefix string) <-chan bootstrap.StreamedEntity[*Identity] {
+	out := make(chan bootstrap.StreamedEntity[*Identity])
 
 	go func() {
 		defer close(out)
 
 		refs, err := repo.ListRefs(refPrefix)
 		if err != nil {
-			out <- entity.StreamedEntity[*Identity]{Err: err}
+			out <- bootstrap.StreamedEntity[*Identity]{Err: err}
 			return
 		}
 
@@ -195,11 +195,11 @@ func readAll(repo repository.ClockedRepo, refPrefix string) <-chan entity.Stream
 			i, err := read(repo, ref)
 
 			if err != nil {
-				out <- entity.StreamedEntity[*Identity]{Err: err}
+				out <- bootstrap.StreamedEntity[*Identity]{Err: err}
 				return
 			}
 
-			out <- entity.StreamedEntity[*Identity]{
+			out <- bootstrap.StreamedEntity[*Identity]{
 				Entity:        i,
 				CurrentEntity: current,
 				TotalEntities: total,
@@ -425,7 +425,7 @@ func (i *Identity) lastVersion() *version {
 }
 
 // Id return the Identity identifier
-func (i *Identity) Id() entity.Id {
+func (i *Identity) Id() bootstrap.Id {
 	// id is the id of the first version
 	return i.versions[0].Id()
 }
@@ -534,7 +534,7 @@ func (i *Identity) SetMetadata(key string, value string) {
 		i.versions = append(i.versions, i.lastVersion().Clone())
 	}
 	// if Id() has been called, we can't change the first version anymore, so we create a new version
-	if len(i.versions) == 1 && i.versions[0].id != entity.UnsetId && i.versions[0].id != "" {
+	if len(i.versions) == 1 && i.versions[0].id != bootstrap.UnsetId && i.versions[0].id != "" {
 		i.versions = append(i.versions, i.lastVersion().Clone())
 	}
 

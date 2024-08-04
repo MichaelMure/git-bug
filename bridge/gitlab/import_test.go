@@ -133,7 +133,7 @@ func TestGitlabImport(t *testing.T) {
 			b, err := backend.Bugs().ResolveBugCreateMetadata(metaKeyGitlabUrl, tt.url)
 			require.NoError(t, err)
 
-			ops := b.Snapshot().Operations
+			ops := b.Compile().Operations
 			require.Len(t, tt.bug.Operations, len(ops))
 
 			for i, op := range tt.bug.Operations {

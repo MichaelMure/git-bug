@@ -8,10 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/MichaelMure/git-bug/entity"
+	bootstrap "github.com/MichaelMure/git-bug/entity/boostrap"
 	"github.com/MichaelMure/git-bug/repository"
 )
 
-func allEntities(t testing.TB, bugs <-chan entity.StreamedEntity[*Foo]) []*Foo {
+func allEntities(t testing.TB, bugs <-chan bootstrap.StreamedEntity[*Foo]) []*Foo {
 	t.Helper()
 
 	var result []*Foo

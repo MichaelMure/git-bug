@@ -39,7 +39,7 @@ type BugExcerpt struct {
 }
 
 func NewBugExcerpt(b *BugCache) *BugExcerpt {
-	snap := b.Snapshot()
+	snap := b.Compile()
 	participantsIds := make([]entity.Id, 0, len(snap.Participants))
 	for _, participant := range snap.Participants {
 		participantsIds = append(participantsIds, participant.Id())

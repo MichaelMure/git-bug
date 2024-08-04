@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/MichaelMure/git-bug/cache"
-	"github.com/MichaelMure/git-bug/entities/identity"
+	"github.com/MichaelMure/git-bug/entity"
 	"github.com/MichaelMure/git-bug/util/lamport"
 )
 
@@ -15,7 +15,7 @@ type Identity struct {
 	Login   string `json:"login"`
 }
 
-func NewIdentity(i identity.Interface) Identity {
+func NewIdentity(i entity.Interface) Identity {
 	return Identity{
 		Id:      i.Id().String(),
 		HumanId: i.Id().Human(),

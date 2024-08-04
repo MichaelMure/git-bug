@@ -179,7 +179,7 @@ func (opp *operationPack) makeExtraTree() []repository.TreeEntry {
 	added := make(map[repository.Hash]interface{})
 
 	for _, ops := range opp.Operations {
-		ops, ok := ops.(OperationWithFiles)
+		ops, ok := ops.(entity.OperationWithFiles)
 		if !ok {
 			continue
 		}

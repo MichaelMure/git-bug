@@ -12,7 +12,7 @@ import (
 )
 
 var _ Operation = &CreateOperation{}
-var _ dag.OperationWithFiles = &CreateOperation{}
+var _ entity.OperationWithFiles = &CreateOperation{}
 
 // CreateOperation define the initial creation of a bug
 type CreateOperation struct {
@@ -78,6 +78,12 @@ func (op *CreateOperation) Validate() error {
 
 	if !text.Safe(op.Message) {
 		return fmt.Errorf("message is not fully printable")
+	}
+
+	for _, file := range op.Files {
+		if !file.IsValid() {
+			return fmt.Errorf("invalid file hash")
+		}
 	}
 
 	return nil

@@ -63,7 +63,7 @@ func (lb *lazyBug) load() error {
 		return err
 	}
 
-	lb.snap = b.Snapshot()
+	lb.snap = b.Compile()
 	return nil
 }
 

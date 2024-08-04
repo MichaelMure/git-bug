@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	_ dag.OperationType = iota
+	_ entity.OperationType = iota
 	CreateOp
 	SetTitleOp
 	AddCommentOp
@@ -29,7 +29,7 @@ var _ Operation = &dag.SetMetadataOperation[*Snapshot]{}
 
 func operationUnmarshaler(raw json.RawMessage, resolvers entity.Resolvers) (dag.Operation, error) {
 	var t struct {
-		OperationType dag.OperationType `json:"type"`
+		OperationType entity.OperationType `json:"type"`
 	}
 
 	if err := json.Unmarshal(raw, &t); err != nil {

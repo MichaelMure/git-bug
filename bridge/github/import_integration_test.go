@@ -54,14 +54,14 @@ func TestGithubImporterIntegration(t *testing.T) {
 
 	b1, err := backend.Bugs().ResolveBugCreateMetadata(metaKeyGithubUrl, "https://github.com/marcus/to-himself/issues/1")
 	require.NoError(t, err)
-	ops1 := b1.Snapshot().Operations
+	ops1 := b1.Compile().Operations
 	require.Equal(t, "marcus", ops1[0].Author().Name())
 	require.Equal(t, "title 1", ops1[0].(*bug.CreateOperation).Title)
 	require.Equal(t, "body text 1", ops1[0].(*bug.CreateOperation).Message)
 
 	b3, err := backend.Bugs().ResolveBugCreateMetadata(metaKeyGithubUrl, "https://github.com/marcus/to-himself/issues/3")
 	require.NoError(t, err)
-	ops3 := b3.Snapshot().Operations
+	ops3 := b3.Compile().Operations
 	require.Equal(t, "issue 3 comment 1", ops3[1].(*bug.AddCommentOperation).Message)
 	require.Equal(t, "issue 3 comment 2", ops3[2].(*bug.AddCommentOperation).Message)
 	require.Equal(t, []bug.Label{"bug"}, ops3[3].(*bug.LabelChangeOperation).Added)
@@ -69,7 +69,7 @@ func TestGithubImporterIntegration(t *testing.T) {
 
 	b4, err := backend.Bugs().ResolveBugCreateMetadata(metaKeyGithubUrl, "https://github.com/marcus/to-himself/issues/4")
 	require.NoError(t, err)
-	ops4 := b4.Snapshot().Operations
+	ops4 := b4.Compile().Operations
 	require.Equal(t, "edited", ops4[1].(*bug.EditCommentOperation).Message)
 
 }

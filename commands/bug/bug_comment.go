@@ -31,7 +31,7 @@ func runBugComment(env *execenv.Env, args []string) error {
 		return err
 	}
 
-	snap := b.Snapshot()
+	snap := b.Compile()
 
 	for i, comment := range snap.Comments {
 		if i != 0 {

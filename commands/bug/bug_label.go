@@ -29,7 +29,7 @@ func runBugLabel(env *execenv.Env, args []string) error {
 		return err
 	}
 
-	snap := b.Snapshot()
+	snap := b.Compile()
 
 	for _, l := range snap.Labels {
 		env.Out.Println(l)

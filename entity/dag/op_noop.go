@@ -6,7 +6,7 @@ import (
 )
 
 var _ Operation = &NoOpOperation[Snapshot]{}
-var _ OperationDoesntChangeSnapshot = &NoOpOperation[Snapshot]{}
+var _ entity.OperationDoesntChangeSnapshot = &NoOpOperation[Snapshot]{}
 
 // NoOpOperation is an operation that does not change the entity state. It can
 // however be used to store arbitrary metadata in the entity history, for example
@@ -15,7 +15,7 @@ type NoOpOperation[SnapT Snapshot] struct {
 	OpBase
 }
 
-func NewNoOpOp[SnapT Snapshot](opType OperationType, author identity.Interface, unixTime int64) *NoOpOperation[SnapT] {
+func NewNoOpOp[SnapT Snapshot](opType entity.OperationType, author identity.Interface, unixTime int64) *NoOpOperation[SnapT] {
 	return &NoOpOperation[SnapT]{
 		OpBase: NewOpBase(opType, author, unixTime),
 	}

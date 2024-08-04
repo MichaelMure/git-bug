@@ -10,50 +10,13 @@ import (
 
 	"github.com/MichaelMure/git-bug/entities/identity"
 	"github.com/MichaelMure/git-bug/entity"
-	"github.com/MichaelMure/git-bug/repository"
 )
 
-// OperationType is an operation type identifier
-type OperationType int
+type Snapshot entity.SnapshotT[Operation]
 
-// Operation is a piece of data defining a change to reflect on the state of an Entity.
-// What this Operation or Entity's state looks like is not of the resort of this package as it only deals with the
-// data structure and storage.
+// Operation is an extended interface for an entity.Operation working with the dag package.
 type Operation interface {
-	// Id return the Operation identifier
-	//
-	// Some care need to be taken to define a correct Id derivation and enough entropy in the data used to avoid
-	// collisions. Notably:
-	// - the Id of the first Operation will be used as the Id of the Entity. Collision need to be avoided across entities
-	//   of the same type (example: no collision within the "bug" namespace).
-	// - collisions can also happen within the set of Operations of an Entity. Simple Operation might not have enough
-	//   entropy to yield unique Ids (example: two "close" operation within the same second, same author).
-	//   If this is a concern, it is recommended to include a piece of random data in the operation's data, to guarantee
-	//   a minimal amount of entropy and avoid collision.
-	//
-	//   Author's note: I tried to find a clever way around that inelegance (stuffing random useless data into the stored
-	//   structure is not exactly elegant), but I failed to find a proper way. Essentially, anything that would reuse some
-	//   other data (parent operation's Id, lamport clock) or the graph structure (depth) impose that the Id would only
-	//   make sense in the context of the graph and yield some deep coupling between Entity and Operation. This in turn
-	//   make the whole thing even less elegant.
-	//
-	// A common way to derive an Id will be to use the entity.DeriveId() function on the serialized operation data.
-	Id() entity.Id
-	// Type return the type of the operation
-	Type() OperationType
-	// Validate check if the Operation data is valid
-	Validate() error
-	// Author returns the author of this operation
-	Author() identity.Interface
-	// Time return the time when the operation was added
-	Time() time.Time
-
-	// SetMetadata store arbitrary metadata about the operation
-	SetMetadata(key string, value string)
-	// GetMetadata retrieve arbitrary metadata about the operation
-	GetMetadata(key string) (string, bool)
-	// AllMetadata return all metadata for this operation
-	AllMetadata() map[string]string
+	entity.Operation
 
 	// setId allow to set the Id, used when unmarshalling only
 	setId(id entity.Id)
@@ -70,30 +33,6 @@ type OperationWithApply[SnapT Snapshot] interface {
 	Apply(snapshot SnapT)
 }
 
-// OperationWithFiles is an optional extension for an Operation that has files dependency, stored in git.
-type OperationWithFiles interface {
-	// GetFiles return the files needed by this operation
-	// This implies that the Operation maintain and store internally the references to those files. This is how
-	// this information is read later, when loading from storage.
-	// For example, an operation that has a text value referencing some files would maintain a mapping (text ref -->
-	// hash).
-	GetFiles() []repository.Hash
-}
-
-// OperationDoesntChangeSnapshot is an interface signaling that the Operation implementing it doesn't change the
-// snapshot, for example a metadata operation that act on other operations.
-type OperationDoesntChangeSnapshot interface {
-	DoesntChangeSnapshot()
-}
-
-// Snapshot is the minimal interface that a snapshot need to implement
-type Snapshot interface {
-	// AllOperations returns all the operations that have been applied to that snapshot, in order
-	AllOperations() []Operation
-	// AppendOperation add an operation in the list
-	AppendOperation(op Operation)
-}
-
 // OpBase implement the common feature that every Operation should support.
 type OpBase struct {
 	// Not serialized. Store the op's id in memory.
@@ -101,8 +40,8 @@ type OpBase struct {
 	// Not serialized
 	author identity.Interface
 
-	OperationType OperationType `json:"type"`
-	UnixTime      int64         `json:"timestamp"`
+	OperationType entity.OperationType `json:"type"`
+	UnixTime      int64                `json:"timestamp"`
 
 	// mandatory random bytes to ensure a better randomness of the data used to later generate the ID
 	// len(Nonce) should be > 20 and < 64 bytes
@@ -115,7 +54,7 @@ type OpBase struct {
 	extraMetadata map[string]string
 }
 
-func NewOpBase(opType OperationType, author identity.Interface, unixTime int64) OpBase {
+func NewOpBase(opType entity.OperationType, author identity.Interface, unixTime int64) OpBase {
 	return OpBase{
 		OperationType: opType,
 		author:        author,
@@ -155,7 +94,7 @@ func IdOperation(op Operation, base *OpBase) entity.Id {
 	return base.id
 }
 
-func (base *OpBase) Type() OperationType {
+func (base *OpBase) Type() entity.OperationType {
 	return base.OperationType
 }
 
@@ -165,7 +104,7 @@ func (base *OpBase) Time() time.Time {
 }
 
 // Validate check the OpBase for errors
-func (base *OpBase) Validate(op Operation, opType OperationType) error {
+func (base *OpBase) Validate(op entity.Operation, opType entity.OperationType) error {
 	if base.OperationType == 0 {
 		return fmt.Errorf("operation type unset")
 	}
@@ -185,7 +124,7 @@ func (base *OpBase) Validate(op Operation, opType OperationType) error {
 		return errors.Wrap(err, "author")
 	}
 
-	if op, ok := op.(OperationWithFiles); ok {
+	if op, ok := op.(entity.OperationWithFiles); ok {
 		for _, hash := range op.GetFiles() {
 			if !hash.IsValid() {
 				return fmt.Errorf("file with invalid hash %v", hash)

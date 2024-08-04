@@ -117,11 +117,11 @@ func TestOperationPackFiles(t *testing.T) {
 	}
 	require.Equal(t, opp, opp2)
 
-	require.ElementsMatch(t, opp2.Operations[0].(OperationWithFiles).GetFiles(), []repository.Hash{
+	require.ElementsMatch(t, opp2.Operations[0].(entity.OperationWithFiles).GetFiles(), []repository.Hash{
 		blobHash1,
 		blobHash2,
 	})
-	require.ElementsMatch(t, opp2.Operations[1].(OperationWithFiles).GetFiles(), []repository.Hash{
+	require.ElementsMatch(t, opp2.Operations[1].(entity.OperationWithFiles).GetFiles(), []repository.Hash{
 		blobHash2,
 	})
 

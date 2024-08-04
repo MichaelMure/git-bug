@@ -1,6 +1,6 @@
-package entity
+package bootstrap
 
-type Interface interface {
+type Entity interface {
 	// Id return the Entity identifier
 	//
 	// This Id need to be immutable without having to store the entity somewhere (ie, an entity only in memory
@@ -9,6 +9,7 @@ type Interface interface {
 	// the root of the entity.
 	// It is acceptable to use such a hash and keep mutating that data as long as Id() is not called.
 	Id() Id
+
 	// Validate check if the Entity data is valid
 	Validate() error
 }

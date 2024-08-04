@@ -175,7 +175,7 @@ func (ge *githubExporter) ExportAll(ctx context.Context, repo *cache.RepoCache, 
 				return
 
 			default:
-				snapshot := b.Snapshot()
+				snapshot := b.Compile()
 
 				// ignore issues created before since date
 				// TODO: compare the Lamport time instead of using the unix time
@@ -197,7 +197,7 @@ func (ge *githubExporter) ExportAll(ctx context.Context, repo *cache.RepoCache, 
 
 // exportBug publish bugs and related events
 func (ge *githubExporter) exportBug(ctx context.Context, b *cache.BugCache, out chan<- core.ExportResult) {
-	snapshot := b.Snapshot()
+	snapshot := b.Compile()
 	var bugUpdated bool
 
 	var bugGithubID string

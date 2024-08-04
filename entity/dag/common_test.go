@@ -19,7 +19,7 @@ import (
 */
 
 const (
-	_ OperationType = iota
+	_ entity.OperationType = iota
 	Op1
 	Op2
 )
@@ -61,7 +61,7 @@ func (op *op2) Validate() error { return nil }
 
 func unmarshaler(raw json.RawMessage, resolvers entity.Resolvers) (Operation, error) {
 	var t struct {
-		OperationType OperationType `json:"type"`
+		OperationType entity.OperationType `json:"type"`
 	}
 
 	if err := json.Unmarshal(raw, &t); err != nil {

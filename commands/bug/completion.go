@@ -59,7 +59,7 @@ func BugAndLabelsCompletion(env *execenv.Env, addOrRemove bool) completion.Valid
 			return completion.HandleError(err)
 		}
 
-		snap := b.Snapshot()
+		snap := b.Compile()
 
 		seenLabels := map[bug.Label]bool{}
 		for _, label := range cleanArgs {

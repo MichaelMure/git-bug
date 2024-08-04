@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/MichaelMure/git-bug/entity"
+	bootstrap "github.com/MichaelMure/git-bug/entity/boostrap"
 	"github.com/MichaelMure/git-bug/repository"
 )
 
@@ -27,7 +27,7 @@ func GetUserIdentity(repo repository.Repo) (*Identity, error) {
 	}
 
 	i, err := ReadLocal(repo, id)
-	if entity.IsErrNotFound(err) {
+	if bootstrap.IsErrNotFound(err) {
 		innerErr := repo.LocalConfig().RemoveAll(identityConfigKey)
 		if innerErr != nil {
 			_, _ = fmt.Fprintln(os.Stderr, errors.Wrap(innerErr, "can't clear user identity").Error())
@@ -38,22 +38,22 @@ func GetUserIdentity(repo repository.Repo) (*Identity, error) {
 	return i, nil
 }
 
-func GetUserIdentityId(repo repository.Repo) (entity.Id, error) {
+func GetUserIdentityId(repo repository.Repo) (bootstrap.Id, error) {
 	val, err := repo.LocalConfig().ReadString(identityConfigKey)
 	if errors.Is(err, repository.ErrNoConfigEntry) {
-		return entity.UnsetId, ErrNoIdentitySet
+		return bootstrap.UnsetId, ErrNoIdentitySet
 	}
 	if errors.Is(err, repository.ErrMultipleConfigEntry) {
-		return entity.UnsetId, ErrMultipleIdentitiesSet
+		return bootstrap.UnsetId, ErrMultipleIdentitiesSet
 	}
 	if err != nil {
-		return entity.UnsetId, err
+		return bootstrap.UnsetId, err
 	}
 
-	var id = entity.Id(val)
+	var id = bootstrap.Id(val)
 
 	if err := id.Validate(); err != nil {
-		return entity.UnsetId, err
+		return bootstrap.UnsetId, err
 	}
 
 	return id, nil

@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
+	bootstrap "github.com/MichaelMure/git-bug/entity/boostrap"
 )
 
 const UnsetCombinedId = CombinedId("unset")
@@ -57,7 +59,7 @@ func (ci CombinedId) Validate() error {
 	if len(ci) == 40 {
 		return fmt.Errorf("outdated repository format, please use https://github.com/MichaelMure/git-bug-migration to upgrade")
 	}
-	if len(ci) != idLength {
+	if len(ci) != bootstrap.IdLength {
 		return fmt.Errorf("invalid length")
 	}
 	for _, r := range ci {
@@ -113,7 +115,7 @@ func (ci CombinedId) SecondaryPrefix() string {
 func CombineIds(primary Id, secondary Id) CombinedId {
 	var id strings.Builder
 
-	for i := 0; i < idLength; i++ {
+	for i := 0; i < bootstrap.IdLength; i++ {
 		switch {
 		default:
 			id.WriteByte(primary[0])

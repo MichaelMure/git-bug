@@ -3,7 +3,7 @@ package identity
 import (
 	"encoding/json"
 
-	"github.com/MichaelMure/git-bug/entity"
+	bootstrap "github.com/MichaelMure/git-bug/entity/boostrap"
 	"github.com/MichaelMure/git-bug/repository"
 	"github.com/MichaelMure/git-bug/util/lamport"
 	"github.com/MichaelMure/git-bug/util/timestamp"
@@ -17,13 +17,13 @@ var _ Interface = &IdentityStub{}
 // When this JSON is deserialized, an IdentityStub is returned instead, to be replaced
 // later by the proper Identity, loaded from the Repo.
 type IdentityStub struct {
-	id entity.Id
+	id bootstrap.Id
 }
 
 func (i *IdentityStub) MarshalJSON() ([]byte, error) {
 	// TODO: add a type marker
 	return json.Marshal(struct {
-		Id entity.Id `json:"id"`
+		Id bootstrap.Id `json:"id"`
 	}{
 		Id: i.id,
 	})
@@ -31,7 +31,7 @@ func (i *IdentityStub) MarshalJSON() ([]byte, error) {
 
 func (i *IdentityStub) UnmarshalJSON(data []byte) error {
 	aux := struct {
-		Id entity.Id `json:"id"`
+		Id bootstrap.Id `json:"id"`
 	}{}
 
 	if err := json.Unmarshal(data, &aux); err != nil {
@@ -44,7 +44,7 @@ func (i *IdentityStub) UnmarshalJSON(data []byte) error {
 }
 
 // Id return the Identity identifier
-func (i *IdentityStub) Id() entity.Id {
+func (i *IdentityStub) Id() bootstrap.Id {
 	return i.id
 }
 

@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/MichaelMure/git-bug/entity"
+	bootstrap "github.com/MichaelMure/git-bug/entity/boostrap"
 	"github.com/MichaelMure/git-bug/repository"
 )
 
@@ -33,7 +33,7 @@ func Pull(repo repository.ClockedRepo, remote string) error {
 		if merge.Err != nil {
 			return merge.Err
 		}
-		if merge.Status == entity.MergeStatusInvalid {
+		if merge.Status == bootstrap.MergeStatusInvalid {
 			return errors.Errorf("merge failure: %s", merge.Reason)
 		}
 	}
@@ -42,8 +42,8 @@ func Pull(repo repository.ClockedRepo, remote string) error {
 }
 
 // MergeAll will merge all the available remote identity
-func MergeAll(repo repository.ClockedRepo, remote string) <-chan entity.MergeResult {
-	out := make(chan entity.MergeResult)
+func MergeAll(repo repository.ClockedRepo, remote string) <-chan bootstrap.MergeResult {
+	out := make(chan bootstrap.MergeResult)
 
 	go func() {
 		defer close(out)
@@ -52,29 +52,29 @@ func MergeAll(repo repository.ClockedRepo, remote string) <-chan entity.MergeRes
 		remoteRefs, err := repo.ListRefs(remoteRefSpec)
 
 		if err != nil {
-			out <- entity.MergeResult{Err: err}
+			out <- bootstrap.MergeResult{Err: err}
 			return
 		}
 
 		for _, remoteRef := range remoteRefs {
 			refSplit := strings.Split(remoteRef, "/")
-			id := entity.Id(refSplit[len(refSplit)-1])
+			id := bootstrap.Id(refSplit[len(refSplit)-1])
 
 			if err := id.Validate(); err != nil {
-				out <- entity.NewMergeInvalidStatus(id, errors.Wrap(err, "invalid ref").Error())
+				out <- bootstrap.NewMergeInvalidStatus(id, errors.Wrap(err, "invalid ref").Error())
 				continue
 			}
 
 			remoteIdentity, err := read(repo, remoteRef)
 
 			if err != nil {
-				out <- entity.NewMergeInvalidStatus(id, errors.Wrap(err, "remote identity is not readable").Error())
+				out <- bootstrap.NewMergeInvalidStatus(id, errors.Wrap(err, "remote identity is not readable").Error())
 				continue
 			}
 
 			// Check for error in remote data
 			if err := remoteIdentity.Validate(); err != nil {
-				out <- entity.NewMergeInvalidStatus(id, errors.Wrap(err, "remote identity is invalid").Error())
+				out <- bootstrap.NewMergeInvalidStatus(id, errors.Wrap(err, "remote identity is invalid").Error())
 				continue
 			}
 
@@ -82,7 +82,7 @@ func MergeAll(repo repository.ClockedRepo, remote string) <-chan entity.MergeRes
 			localExist, err := repo.RefExist(localRef)
 
 			if err != nil {
-				out <- entity.NewMergeError(err, id)
+				out <- bootstrap.NewMergeError(err, id)
 				continue
 			}
 
@@ -91,32 +91,32 @@ func MergeAll(repo repository.ClockedRepo, remote string) <-chan entity.MergeRes
 				err := repo.CopyRef(remoteRef, localRef)
 
 				if err != nil {
-					out <- entity.NewMergeError(err, id)
+					out <- bootstrap.NewMergeError(err, id)
 					return
 				}
 
-				out <- entity.NewMergeNewStatus(id, remoteIdentity)
+				out <- bootstrap.NewMergeNewStatus(id, remoteIdentity)
 				continue
 			}
 
 			localIdentity, err := read(repo, localRef)
 
 			if err != nil {
-				out <- entity.NewMergeError(errors.Wrap(err, "local identity is not readable"), id)
+				out <- bootstrap.NewMergeError(errors.Wrap(err, "local identity is not readable"), id)
 				return
 			}
 
 			updated, err := localIdentity.Merge(repo, remoteIdentity)
 
 			if err != nil {
-				out <- entity.NewMergeInvalidStatus(id, errors.Wrap(err, "merge failed").Error())
+				out <- bootstrap.NewMergeInvalidStatus(id, errors.Wrap(err, "merge failed").Error())
 				return
 			}
 
 			if updated {
-				out <- entity.NewMergeUpdatedStatus(id, localIdentity)
+				out <- bootstrap.NewMergeUpdatedStatus(id, localIdentity)
 			} else {
-				out <- entity.NewMergeNothingStatus(id)
+				out <- bootstrap.NewMergeNothingStatus(id)
 			}
 		}
 	}()
@@ -128,7 +128,7 @@ func MergeAll(repo repository.ClockedRepo, remote string) <-chan entity.MergeRes
 // It is left as a responsibility to the caller to make sure that this identities is not
 // linked from another entity, otherwise it would break it.
 // Remove is idempotent.
-func Remove(repo repository.ClockedRepo, id entity.Id) error {
+func Remove(repo repository.ClockedRepo, id bootstrap.Id) error {
 	var fullMatches []string
 
 	refs, err := repo.ListRefs(identityRefPattern + id.String())
@@ -136,7 +136,7 @@ func Remove(repo repository.ClockedRepo, id entity.Id) error {
 		return err
 	}
 	if len(refs) > 1 {
-		return entity.NewErrMultipleMatch(Typename, entity.RefsToIds(refs))
+		return bootstrap.NewErrMultipleMatch(Typename, bootstrap.RefsToIds(refs))
 	}
 	if len(refs) == 1 {
 		// we have the identity locally
@@ -155,7 +155,7 @@ func Remove(repo repository.ClockedRepo, id entity.Id) error {
 			return err
 		}
 		if len(remoteRefs) > 1 {
-			return entity.NewErrMultipleMatch(Typename, entity.RefsToIds(refs))
+			return bootstrap.NewErrMultipleMatch(Typename, bootstrap.RefsToIds(refs))
 		}
 		if len(remoteRefs) == 1 {
 			// found the identity in a remote
@@ -164,7 +164,7 @@ func Remove(repo repository.ClockedRepo, id entity.Id) error {
 	}
 
 	if len(fullMatches) == 0 {
-		return entity.NewErrNotFound(Typename)
+		return bootstrap.NewErrNotFound(Typename)
 	}
 
 	for _, ref := range fullMatches {
