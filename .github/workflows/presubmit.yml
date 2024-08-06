@@ -9,12 +9,7 @@
 name: presubmit
 
 on:
-  merge_group:
-    types:
-      - checks_requested
-  pull_request:
-    branches:
-      - master
+  workflow_call:
 
 concurrency:
   group: ${{ github.ref }}
