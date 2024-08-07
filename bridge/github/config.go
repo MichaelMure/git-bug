@@ -277,7 +277,9 @@ func pollGithubForAuthorization(deviceCode string, intervalSec int64) (string, e
 	for {
 		resp, err := client.PostForm("https://github.com/login/oauth/access_token", params)
 		if err != nil {
-			return "", errors.Wrap(err, "error polling the Github API")
+			fmt.Printf("error polling the Github API: %s\n", err)
+			time.Sleep(interval * time.Millisecond)
+			continue
 		}
 		if resp.StatusCode != http.StatusOK {
 			_ = resp.Body.Close()
@@ -287,13 +289,17 @@ func pollGithubForAuthorization(deviceCode string, intervalSec int64) (string, e
 		data, err := io.ReadAll(resp.Body)
 		if err != nil {
 			_ = resp.Body.Close()
-			return "", errors.Wrap(err, "error polling the Github API")
+			fmt.Printf("error polling the Github API: %s\n", err)
+			time.Sleep(interval * time.Millisecond)
+			continue
 		}
 		_ = resp.Body.Close()
 
 		values, err := url.ParseQuery(string(data))
 		if err != nil {
-			return "", errors.Wrap(err, "error decoding Github API response")
+			fmt.Printf("error decoding Github API response: %s\n", err)
+			time.Sleep(interval * time.Millisecond)
+			continue
 		}
 
 		if token := values.Get("access_token"); token != "" {
