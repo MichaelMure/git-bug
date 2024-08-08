@@ -7,6 +7,7 @@ import (
 
 	"github.com/MichaelMure/git-bug/commands/completion"
 	"github.com/MichaelMure/git-bug/commands/execenv"
+	"github.com/MichaelMure/git-bug/repository"
 )
 
 func newPushCommand(env *execenv.Env) *cobra.Command {
@@ -24,13 +25,18 @@ func newPushCommand(env *execenv.Env) *cobra.Command {
 }
 
 func runPush(env *execenv.Env, args []string) error {
-	if len(args) > 1 {
+	var remote string
+	switch {
+	case len(args) > 1:
 		return errors.New("Only pushing to one remote at a time is supported")
-	}
-
-	remote := "origin"
-	if len(args) == 1 {
+	case len(args) == 1:
 		remote = args[0]
+	default:
+		v, err := repository.GetDefaultString("git-bug.remote", env.Repo.AnyConfig(), "origin")
+		if err != nil {
+			return err
+		}
+		remote = v
 	}
 
 	stdout, err := env.Backend.Push(remote)
