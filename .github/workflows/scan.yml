@@ -1,12 +1,7 @@
 name: scan
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-  schedule:
-    - cron: '0 12 * * 6'
+  workflow_call:
 
 permissions:
   security-events: write
