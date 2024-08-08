@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -95,4 +96,49 @@ func TestGoGit_DetectsSubmodules(t *testing.T) {
 	result, err := detectGitPath(d, 0)
 	assert.Empty(t, err)
 	assert.Equal(t, expected, result)
+}
+
+func TestGoGitRepoSSH(t *testing.T) {
+	repo := CreateGoGitTestRepo(t, false)
+
+	err := repo.AddRemote("ssh", "ssh://git@github.com:MichaelMure/git-bug.git")
+	if err != nil {
+		log.Fatal(err)
+	}
+	keys, err := repo.SSHAuth("ssh")
+	require.NotNil(t, keys)
+	require.Empty(t, err)
+
+	err = repo.AddRemote("http", "http://github.com/MichaelMure/git-bug.git")
+	if err != nil {
+		log.Fatal(err)
+	}
+	keys, err = repo.SSHAuth("http")
+	require.Nil(t, keys)
+	require.Empty(t, err)
+
+	err = repo.AddRemote("https", "https://github.com/MichaelMure/git-bug.git")
+	if err != nil {
+		log.Fatal(err)
+	}
+	keys, err = repo.SSHAuth("https")
+	require.Nil(t, keys)
+	require.Empty(t, err)
+
+	err = repo.AddRemote("git", "git://github.com/MichaelMure/git-bug.git")
+	if err != nil {
+		log.Fatal(err)
+	}
+	keys, err = repo.SSHAuth("git")
+	require.Nil(t, keys)
+	require.Empty(t, err)
+
+	err = repo.AddRemote("scp-like", "git@github.com:MichaelMure/git-bug.git")
+	if err != nil {
+		log.Fatal(err)
+	}
+	keys, err = repo.SSHAuth("scp-like")
+	require.NotNil(t, keys)
+	require.Empty(t, err)
+
 }

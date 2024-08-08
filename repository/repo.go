@@ -7,6 +7,7 @@ import (
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/go-git/go-billy/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 
 	"github.com/MichaelMure/git-bug/util/lamport"
 )
@@ -141,6 +142,9 @@ type RepoData interface {
 	// Additionally, PushRefs will update the local references in refs/remotes/<remote>/foo to match
 	// the remote state.
 	PushRefs(remote string, prefixes ...string) (string, error)
+
+	// SSHAuth will attempt to read public keys for SSH auth
+	SSHAuth(remote string) (*ssh.PublicKeys, error)
 
 	// StoreData will store arbitrary data and return the corresponding hash
 	StoreData(data []byte) (Hash, error)

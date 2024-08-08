@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -20,6 +21,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sys/execabs"
 
@@ -382,13 +384,30 @@ func (repo *GoGitRepo) FetchRefs(remote string, prefixes ...string) (string, err
 
 	buf := bytes.NewBuffer(nil)
 
-	err := repo.r.Fetch(&gogit.FetchOptions{
+	fetchOptions := &gogit.FetchOptions{
 		RemoteName: remote,
 		RefSpecs:   refSpecs,
 		Progress:   buf,
-	})
+	}
+
+	publicKeys, err := repo.SSHAuth(remote)
+	if err != nil {
+		return "", err
+	}
+
+	err = repo.r.Fetch(fetchOptions)
 	if err == gogit.NoErrAlreadyUpToDate {
 		return "already up-to-date", nil
+	}
+	// ssh-agent is required if ssh or scp-like url is configured in repository config
+	// we can not fetch if the ssh-agent has invalid keys or ssh-agent is not running
+	// retry to fetch again if we can retreive public keys from the users home directory
+	if err != nil && publicKeys != nil {
+		fetchOptions.Auth = publicKeys
+		err = repo.r.Fetch(fetchOptions)
+		if err == gogit.NoErrAlreadyUpToDate {
+			return "already up-to-date", nil
+		}
 	}
 	if err != nil {
 		return "", err
@@ -435,19 +454,74 @@ func (repo *GoGitRepo) PushRefs(remote string, prefixes ...string) (string, erro
 
 	buf := bytes.NewBuffer(nil)
 
-	err = remo.Push(&gogit.PushOptions{
+	pushOptions := &gogit.PushOptions{
 		RemoteName: remote,
 		RefSpecs:   refSpecs,
 		Progress:   buf,
-	})
+	}
+
+	publicKeys, err := repo.SSHAuth(remote)
+	if err != nil {
+		return "", err
+	}
+
+	err = repo.r.Push(pushOptions)
 	if err == gogit.NoErrAlreadyUpToDate {
 		return "already up-to-date", nil
+	}
+	// ssh-agent is required if ssh or scp-like url is configured in repository config
+	// we can not push if the ssh-agent has invalid keys or ssh-agent is not running
+	// retry to push again if we can retreive public keys from the users home directory
+	if err != nil && publicKeys != nil {
+		pushOptions.Auth = publicKeys
+		err = repo.r.Push(pushOptions)
+		if err == gogit.NoErrAlreadyUpToDate {
+			return "already up-to-date", nil
+		}
 	}
 	if err != nil {
 		return "", err
 	}
 
 	return buf.String(), nil
+}
+
+// SSHAuth will attempt to read public keys for SSH auth
+// if the repository remote contains a ssh or scp-like url
+func (repo *GoGitRepo) SSHAuth(remote string) (*ssh.PublicKeys, error) {
+	// get the repository config
+	config, err := repo.r.Config()
+	if err != nil {
+		return nil, err
+	}
+
+	// check if the repository config has at least one remote url
+	remotes, found := config.Remotes[remote]
+	if !found || len(remotes.URLs) < 1 {
+		return nil, fmt.Errorf("remote %s url not found in repository config", remote)
+	}
+
+	schemeRegexp := regexp.MustCompile(`^[^:]+://`)
+	scpLikeRegexp := regexp.MustCompile(`^(?:(?P<user>[^@]+)@)?(?P<host>)`)
+
+	// try to load public keys from the users home directory
+	// if the repository remote contains a ssh or scp-like url
+	if strings.HasPrefix(remotes.URLs[0], "ssh://") || (scpLikeRegexp.MatchString(remotes.URLs[0]) && !schemeRegexp.MatchString(remotes.URLs[0])) {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, err
+		}
+
+		// try to find and load valid public keys from the users home directory
+		attemptKeys := []string{"id_rsa", "id_ecdsa", "id_ecdsa_sk", "id_ed25519", "id_ed25519_sk", "id_xmss", "id_dsa"}
+		for _, key := range attemptKeys {
+			authMethod, err := ssh.NewPublicKeysFromFile("git", filepath.Join(home, ".ssh", key), "")
+			if err == nil {
+				return authMethod, nil
+			}
+		}
+	}
+	return nil, nil
 }
 
 // StoreData will store arbitrary data and return the corresponding hash

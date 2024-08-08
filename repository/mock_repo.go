@@ -10,6 +10,7 @@ import (
 	"github.com/99designs/keyring"
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/go-git/go-billy/v5/memfs"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 
 	"github.com/MichaelMure/git-bug/util/lamport"
 )
@@ -249,6 +250,10 @@ func (r *mockRepoData) FetchRefs(remote string, prefixes ...string) (string, err
 
 // PushRefs push git refs to a remote
 func (r *mockRepoData) PushRefs(remote string, prefixes ...string) (string, error) {
+	panic("implement me")
+}
+
+func (r *mockRepoData) SSHAuth(remote string) (*ssh.PublicKeys, error) {
 	panic("implement me")
 }
 
